@@ -1,10 +1,10 @@
 ---
 import { getEntry, render } from "astro:content";
 import Markdown from "@components/misc/Markdown.astro";
+import friendsItems from "../_data/friends.json";
 import I18nKey from "../i18n/i18nKey";
 import { i18n } from "../i18n/translation";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
-import friendsItems from "../_data/friends.json";
 
 const friendsPage = await getEntry("spec", "friends");
 
