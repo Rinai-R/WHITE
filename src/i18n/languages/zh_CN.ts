@@ -31,7 +31,7 @@ export const zh_CN: Translation = {
 	[Key.systemMode]: "跟随系统",
 
 	[Key.more]: "更多",
-	[Key.friends]: '友链',
+	[Key.friends]: "友链",
 	[Key.author]: "作者",
 	[Key.publishedAt]: "发布于",
 	[Key.license]: "许可协议",

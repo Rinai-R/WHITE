@@ -23,7 +23,7 @@ export const en: Translation = {
 	[Key.minutesCount]: "minutes",
 	[Key.postCount]: "post",
 	[Key.postsCount]: "posts",
-	[Key.friends]: 'Friends',
+	[Key.friends]: "Friends",
 	[Key.themeColor]: "Theme Color",
 
 	[Key.lightMode]: "Light",
