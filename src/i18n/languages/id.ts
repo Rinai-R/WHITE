@@ -23,7 +23,7 @@ export const id: Translation = {
 	[Key.minutesCount]: "menit",
 	[Key.postCount]: "postingan",
 	[Key.postsCount]: "postingan",
-
+	[Key.friends]: "Tautan Ramah",
 	[Key.themeColor]: "Warna Tema",
 
 	[Key.lightMode]: "Terang",
