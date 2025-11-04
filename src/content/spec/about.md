@@ -1,9 +1,7 @@
 # About
-This is the demo site for [Fuwari](https://github.com/saicaca/fuwari).
 
-::github{repo="saicaca/fuwari"}
+cqupt24 级的一名计算机专业的学生🧑‍🎓
 
-> ### Sources of images used in this site
-> - [Unsplash](https://unsplash.com/)
-> - [星と少女](https://www.pixiv.net/artworks/108916539) by [Stella](https://www.pixiv.net/users/93273965)
-> - [Rabbit - v1.4 Showcase](https://civitai.com/posts/586908) by [Rabbit_YourMajesty](https://civitai.com/user/Rabbit_YourMajesty)
+爱好coding⌨️，偶尔会玩旮旯给木🥰
+
+目前阶段在寻找 coding 的乐趣，大学入学之后开始接触编程，学了点 c/cpp 的语法之后，一直到现在在学 golang 后端开发。
