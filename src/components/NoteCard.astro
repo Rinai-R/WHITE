@@ -1,0 +1,213 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { Icon } from "astro-icon/components";
+import I18nKey from "@i18n/i18nKey";
+import { i18n } from "@i18n/translation";
+import Markdown from "@components/misc/Markdown.astro";
+import { formatDateToYYYYMMDD } from "@utils/date-utils";
+
+interface Props {
+	class?: string;
+	entry: CollectionEntry<"notes">;
+	style?: string;
+}
+
+const { entry, style = "" } = Astro.props;
+const className = Astro.props.class;
+
+const noteTitle =
+	(entry.data.title && entry.data.title.trim()) || i18n(I18nKey.untitled);
+
+const { Content } = await entry.render();
+---
+
+<div
+        class:list={[
+            "card-base note-card w-full rounded-[var(--radius-large)] overflow-hidden transition",
+            className,
+        ]}
+        style={style}
+>
+    <div class="note-card__inner">
+        <div class="note-card__header">
+            <div class="note-card__title">
+                <span class="note-card__icon">
+                    <Icon name="material-symbols:edit-note-rounded" />
+                </span>
+                <span class="note-card__heading">{noteTitle}</span>
+                {entry.data.pinned && (
+                    <span class="note-pin-badge">
+                        <Icon name="material-symbols:push-pin" class="note-pin-badge__icon" />
+                        <span>{i18n(I18nKey.pinned)}</span>
+                    </span>
+                )}
+            </div>
+            <div class="note-card__meta">
+                <span class="note-card__meta-item">
+                    <Icon name="material-symbols:calendar-clock" />
+                    {formatDateToYYYYMMDD(entry.data.published)}
+                </span>
+                {entry.data.updated &&
+                    entry.data.updated.getTime() !== entry.data.published.getTime() && (
+                        <span class="note-card__meta-item note-card__meta-item--updated">
+                            <Icon name="material-symbols:history" />
+                            {formatDateToYYYYMMDD(entry.data.updated)}
+                        </span>
+                    )}
+            </div>
+        </div>
+
+        <div class="note-card__body" data-pagefind-body>
+            <div class="note-card__body-frame">
+                <div class="note-card__body-content max-h-[22rem] overflow-y-auto">
+                    <Markdown class="text-sm md:text-base">
+                        <Content />
+                    </Markdown>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.note-card {
+    position: relative;
+    background: var(--card-bg);
+    border: 1px solid color-mix(in srgb, var(--primary) 16%, var(--card-bg));
+    box-shadow: 0 12px 28px -24px rgba(0, 0, 0, 0.55);
+}
+
+.note-card__inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 1.6rem clamp(1.5rem, 2vw, 2.25rem);
+}
+
+.note-card__header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+@media (min-width: 768px) {
+    .note-card__header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+}
+
+.note-card__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+}
+
+.note-card__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.15rem;
+    width: 2.15rem;
+    border-radius: 0.75rem;
+    background: color-mix(in srgb, var(--primary) 14%, transparent);
+    color: color-mix(in srgb, var(--primary) 85%, white 15%);
+}
+
+.note-card__icon :global(svg) {
+    font-size: 1.4rem;
+}
+
+.note-card__heading {
+    font-size: clamp(1.1rem, 1.4vw + 1rem, 1.5rem);
+    font-weight: 600;
+    color: color-mix(in srgb, var(--foreground, var(--primary)) 85%, transparent);
+}
+
+.note-card__meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    color: color-mix(in srgb, var(--foreground, var(--primary)) 70%, white 15%);
+}
+
+.note-card__meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.65rem;
+    border-radius: 9999px;
+    background: color-mix(in srgb, var(--primary) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+.note-card__meta-item--updated {
+    background: color-mix(in srgb, var(--primary) 7%, transparent);
+}
+
+.note-card__meta-item :global(svg) {
+    font-size: 1rem;
+}
+
+:global(.dark) .note-card__meta {
+    color: color-mix(in srgb, white 80%, transparent);
+}
+
+:global(.dark) .note-card__meta-item {
+    background: color-mix(in srgb, white 12%, transparent);
+    border-color: color-mix(in srgb, white 22%, transparent);
+    color: color-mix(in srgb, white 85%, transparent);
+}
+
+.note-card__body {
+    position: relative;
+}
+
+.note-card__body-frame {
+    position: relative;
+    padding: 0.95rem 1.15rem;
+    border-radius: 1.15rem;
+    background: color-mix(in srgb, var(--card-bg) 65%, color-mix(in srgb, var(--primary) 30%, white 5%));
+    border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
+    box-shadow:
+        inset 0 0 0 1px color-mix(in srgb, var(--primary) 10%, transparent),
+        0 6px 18px -18px rgba(0, 0, 0, 0.55);
+}
+
+.note-card__body-content {
+    position: relative;
+    padding-right: 0.35rem;
+}
+
+.note-card__body-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.note-card__body-content::-webkit-scrollbar-thumb {
+    background-color: color-mix(in srgb, var(--primary) 45%, transparent);
+    border-radius: 9999px;
+}
+
+.note-pin-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: color-mix(in srgb, var(--primary) 15%, transparent);
+    color: var(--primary);
+    font-size: 0.625rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 35%, transparent);
+}
+
+.note-pin-badge__icon {
+    font-size: 0.85rem;
+}
+</style>

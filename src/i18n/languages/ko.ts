@@ -5,6 +5,7 @@ export const ko: Translation = {
 	[Key.home]: "홈",
 	[Key.about]: "소개",
 	[Key.archive]: "아카이브",
+	[Key.notes]: "메모",
 	[Key.search]: "검색",
 
 	[Key.tags]: "태그",
@@ -16,6 +17,7 @@ export const ko: Translation = {
 	[Key.untitled]: "제목 없음",
 	[Key.uncategorized]: "분류되지 않음",
 	[Key.noTags]: "태그 없음",
+	[Key.pinned]: "고정됨",
 
 	[Key.wordCount]: "단어",
 	[Key.wordsCount]: "단어",

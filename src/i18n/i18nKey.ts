@@ -2,6 +2,7 @@ enum I18nKey {
 	home = "home",
 	about = "about",
 	archive = "archive",
+	notes = "notes",
 	search = "search",
 
 	tags = "tags",
@@ -13,6 +14,7 @@ enum I18nKey {
 	untitled = "untitled",
 	uncategorized = "uncategorized",
 	noTags = "noTags",
+	pinned = "pinned",
 
 	wordCount = "wordCount",
 	wordsCount = "wordsCount",

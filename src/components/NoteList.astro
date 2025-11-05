@@ -1,0 +1,19 @@
+---
+import type { CollectionEntry } from "astro:content";
+import NoteCard from "./NoteCard.astro";
+
+const { page } = Astro.props;
+
+let delay = 0;
+const interval = 40;
+---
+
+<div class="flex flex-col gap-4 mb-4">
+    {page.data.map((entry: CollectionEntry<"notes">) => (
+        <NoteCard
+                entry={entry}
+                class:list="onload-animation"
+                style={`animation-delay: calc(var(--content-delay) + ${delay++ * interval}ms);`}
+        />
+    ))}
+</div>

@@ -5,6 +5,7 @@ export const zh_TW: Translation = {
 	[Key.home]: "首頁",
 	[Key.about]: "關於",
 	[Key.archive]: "彙整",
+	[Key.notes]: "小記",
 	[Key.search]: "搜尋",
 
 	[Key.tags]: "標籤",
@@ -16,6 +17,7 @@ export const zh_TW: Translation = {
 	[Key.untitled]: "無標題",
 	[Key.uncategorized]: "未分類",
 	[Key.noTags]: "無標籤",
+	[Key.pinned]: "置頂",
 
 	[Key.wordCount]: "字",
 	[Key.wordsCount]: "字",

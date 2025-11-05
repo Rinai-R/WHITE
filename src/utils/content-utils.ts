@@ -46,6 +46,49 @@ export async function getSortedPostsList(): Promise<PostForList[]> {
 
 	return sortedPostsList;
 }
+async function getRawSortedNotes() {
+	const allNotes = await getCollection("notes", ({ data }) => {
+		return import.meta.env.PROD ? data.draft !== true : true;
+	});
+
+	const sorted = allNotes.sort((a, b) => {
+		const pinnedDiff =
+			Number(Boolean(b.data.pinned)) - Number(Boolean(a.data.pinned));
+		if (pinnedDiff !== 0) return pinnedDiff;
+		const dateA = new Date(a.data.published);
+		const dateB = new Date(b.data.published);
+		return dateA > dateB ? -1 : 1;
+	});
+	return sorted;
+}
+
+export async function getSortedNotes() {
+	const sorted = await getRawSortedNotes();
+
+	for (let i = 1; i < sorted.length; i++) {
+		sorted[i].data.nextSlug = sorted[i - 1].slug;
+		sorted[i].data.nextTitle = sorted[i - 1].data.title;
+	}
+	for (let i = 0; i < sorted.length - 1; i++) {
+		sorted[i].data.prevSlug = sorted[i + 1].slug;
+		sorted[i].data.prevTitle = sorted[i + 1].data.title;
+	}
+
+	return sorted;
+}
+export type NoteForList = {
+	slug: string;
+	data: CollectionEntry<"notes">["data"];
+};
+
+export async function getSortedNotesList(): Promise<NoteForList[]> {
+	const sortedFullNotes = await getRawSortedNotes();
+
+	return sortedFullNotes.map((note) => ({
+		slug: note.slug,
+		data: note.data,
+	}));
+}
 export type Tag = {
 	name: string;
 	count: number;

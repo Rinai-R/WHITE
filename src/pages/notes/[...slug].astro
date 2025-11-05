@@ -1,0 +1,138 @@
+---
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import Markdown from "@components/misc/Markdown.astro";
+import { getSortedNotes } from "@utils/content-utils";
+import { getNoteUrlBySlug } from "@utils/url-utils";
+import { formatDateToYYYYMMDD } from "@utils/date-utils";
+import { Icon } from "astro-icon/components";
+import { profileConfig, siteConfig } from "@/config";
+import I18nKey from "@i18n/i18nKey";
+import { i18n } from "@i18n/translation";
+
+export async function getStaticPaths() {
+	const noteEntries = await getSortedNotes();
+	return noteEntries.map((entry) => ({
+		params: { slug: entry.slug },
+		props: { entry },
+	}));
+}
+
+const { entry } = Astro.props;
+const displayTitle =
+	(entry.data.title && entry.data.title.trim()) || i18n(I18nKey.untitled);
+
+const { Content, headings, remarkPluginFrontmatter } = await entry.render();
+
+const description =
+	(remarkPluginFrontmatter?.excerpt?.trim?.() ?? "") || displayTitle;
+
+const jsonLd = {
+	"@context": "https://schema.org",
+	"@type": "NoteDigitalDocument",
+	headline: displayTitle,
+	description,
+	dateCreated: formatDateToYYYYMMDD(entry.data.published),
+	dateModified: formatDateToYYYYMMDD(
+		entry.data.updated ?? entry.data.published,
+	),
+	inLanguage: entry.data.lang
+		? entry.data.lang.replace("_", "-")
+		: siteConfig.lang.replace("_", "-"),
+	author: {
+		"@type": "Person",
+		name: profileConfig.name,
+		url: Astro.site,
+	},
+};
+---
+
+<MainGridLayout
+        title={displayTitle}
+        description={description}
+        lang={entry.data.lang}
+        setOGTypeArticle={true}
+        headings={headings}
+>
+    <script is:inline slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
+    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative mb-4">
+        <div class="card-base z-10 px-6 md:px-8 pt-6 pb-6 relative w-full">
+            <div class="flex flex-col gap-3 mb-6 onload-animation">
+                <div
+                        data-pagefind-body data-pagefind-weight="8" data-pagefind-meta="title"
+                        class="transition text-[1.625rem] md:text-[1.875rem] font-semibold text-black/90 dark:text-white/90"
+                >
+                    {displayTitle}
+                </div>
+                {entry.data.pinned && (
+                    <span class="note-pin-badge onload-animation">
+                        <Icon name="material-symbols:push-pin" class="text-xs md:text-sm" />
+                        <span>{i18n(I18nKey.pinned)}</span>
+                    </span>
+                )}
+                <div class="flex flex-wrap items-center gap-3 text-sm text-black/45 dark:text-white/45">
+                    <div class="flex items-center gap-2">
+                        <Icon name="material-symbols:calendar-today-outline-rounded" class="text-lg"></Icon>
+                        <span>{formatDateToYYYYMMDD(entry.data.published)}</span>
+                    </div>
+                    {entry.data.updated && entry.data.updated.getTime() !== entry.data.published.getTime() && (
+                        <div class="flex items-center gap-2">
+                            <Icon name="material-symbols:edit-outline" class="text-lg"></Icon>
+                            <span>{formatDateToYYYYMMDD(entry.data.updated)}</span>
+                        </div>
+                    )}
+                </div>
+                {description && description !== displayTitle && (
+                    <div class="text-sm text-65 md:text-base" data-pagefind-meta="description">
+                        {description}
+                    </div>
+                )}
+            </div>
+            <Markdown class="markdown-content onload-animation">
+                <Content />
+            </Markdown>
+        </div>
+    </div>
+
+    <div class="flex flex-col md:flex-row justify-between mb-4 gap-4 overflow-hidden w-full">
+        <a
+                href={entry.data.nextSlug ? getNoteUrlBySlug(entry.data.nextSlug) : "#"}
+                class:list={["w-full font-bold overflow-hidden active:scale-95", {"pointer-events-none": !entry.data.nextSlug}]}
+        >
+            {entry.data.nextSlug && <div class="btn-card rounded-2xl w-full h-[3.5rem] max-w-full px-4 flex items-center !justify-start gap-4">
+                <Icon name="material-symbols:chevron-left-rounded" class="text-[2rem] text-[var(--primary)]" />
+                <div class="overflow-hidden transition overflow-ellipsis whitespace-nowrap max-w-[calc(100%_-_3rem)] text-black/75 dark:text-white/75">
+                    {entry.data.nextTitle || i18n(I18nKey.untitled)}
+                </div>
+            </div>}
+        </a>
+
+        <a
+                href={entry.data.prevSlug ? getNoteUrlBySlug(entry.data.prevSlug) : "#"}
+                class:list={["w-full font-bold overflow-hidden active:scale-95", {"pointer-events-none": !entry.data.prevSlug}]}
+        >
+            {entry.data.prevSlug && <div class="btn-card rounded-2xl w-full h-[3.5rem] max-w-full px-4 flex items-center !justify-end gap-4">
+                <div class="overflow-hidden transition overflow-ellipsis whitespace-nowrap max-w-[calc(100%_-_3rem)] text-black/75 dark:text-white/75">
+                    {entry.data.prevTitle || i18n(I18nKey.untitled)}
+                </div>
+                <Icon name="material-symbols:chevron-right-rounded" class="text-[2rem] text-[var(--primary)]" />
+            </div>}
+        </a>
+    </div>
+</MainGridLayout>
+
+<style>
+.note-pin-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: color-mix(in srgb, var(--primary) 15%, transparent);
+    color: var(--primary);
+    font-size: 0.625rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    width: fit-content;
+}
+</style>

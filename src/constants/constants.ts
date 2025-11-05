@@ -1,4 +1,5 @@
 export const PAGE_SIZE = 8;
+export const NOTES_PAGE_SIZE = 12;
 
 export const LIGHT_MODE = "light",
 	DARK_MODE = "dark",

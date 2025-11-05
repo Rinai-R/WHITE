@@ -5,6 +5,7 @@ export const es: Translation = {
 	[Key.home]: "Inicio",
 	[Key.about]: "Sobre mí",
 	[Key.archive]: "Archivo",
+	[Key.notes]: "Notas",
 	[Key.search]: "Buscar",
 
 	[Key.tags]: "Etiquetas",
@@ -16,6 +17,7 @@ export const es: Translation = {
 	[Key.untitled]: "Sin título",
 	[Key.uncategorized]: "Sin categoría",
 	[Key.noTags]: "Sin etiquetas",
+	[Key.pinned]: "Fijado",
 
 	[Key.wordCount]: "palabra",
 	[Key.wordsCount]: "palabras",

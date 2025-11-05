@@ -5,6 +5,7 @@ export const id: Translation = {
 	[Key.home]: "Beranda",
 	[Key.about]: "Tentang",
 	[Key.archive]: "Arsip",
+	[Key.notes]: "Catatan",
 	[Key.search]: "Cari",
 
 	[Key.tags]: "Tag",
@@ -16,6 +17,7 @@ export const id: Translation = {
 	[Key.untitled]: "Tanpa Judul",
 	[Key.uncategorized]: "Tanpa Kategori",
 	[Key.noTags]: "Tanpa Tag",
+	[Key.pinned]: "Disematkan",
 
 	[Key.wordCount]: "kata",
 	[Key.wordsCount]: "kata",

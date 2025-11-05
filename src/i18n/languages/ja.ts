@@ -5,6 +5,7 @@ export const ja: Translation = {
 	[Key.home]: "Home",
 	[Key.about]: "About",
 	[Key.archive]: "Archive",
+	[Key.notes]: "メモ",
 	[Key.search]: "検索",
 
 	[Key.tags]: "タグ",
@@ -16,6 +17,7 @@ export const ja: Translation = {
 	[Key.untitled]: "タイトルなし",
 	[Key.uncategorized]: "カテゴリなし",
 	[Key.noTags]: "タグなし",
+	[Key.pinned]: "固定",
 
 	[Key.wordCount]: "文字",
 	[Key.wordsCount]: "文字",

@@ -5,6 +5,7 @@ export const vi: Translation = {
 	[Key.home]: "Trang chủ",
 	[Key.about]: "Giới thiệu",
 	[Key.archive]: "Kho bài",
+	[Key.notes]: "Ghi chú",
 	[Key.search]: "Tìm kiếm",
 
 	[Key.tags]: "Thẻ",
@@ -16,6 +17,7 @@ export const vi: Translation = {
 	[Key.untitled]: "Không tiêu đề",
 	[Key.uncategorized]: "Chưa phân loại",
 	[Key.noTags]: "Chưa có thẻ",
+	[Key.pinned]: "Được ghim",
 
 	[Key.wordCount]: "từ",
 	[Key.wordsCount]: "từ",
