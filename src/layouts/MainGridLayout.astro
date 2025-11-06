@@ -62,7 +62,10 @@ const resolveBannerImages = () => {
 };
 
 const bannerImages = resolveBannerImages();
-const carouselConfig = siteConfig.wallpaper.carousel || { enable: false, interval: 6 };
+const carouselConfig = siteConfig.wallpaper.carousel || {
+	enable: false,
+	interval: 6,
+};
 
 const {
 	title,
@@ -77,8 +80,10 @@ const hasBannerCredit =
 	isBannerMode && !!siteConfig.wallpaper.banner?.credit?.enable;
 const hasBannerLink = !!siteConfig.wallpaper.banner?.credit?.url;
 
-const mainPanelOverlap =
-	Math.max(MAIN_PANEL_OVERLAPS_BANNER_HEIGHT - BANNER_WAVE_HEIGHT, 0);
+const mainPanelOverlap = Math.max(
+	MAIN_PANEL_OVERLAPS_BANNER_HEIGHT - BANNER_WAVE_HEIGHT,
+	0,
+);
 
 const mainPanelTop = isBannerMode
 	? `calc(${BANNER_HEIGHT}vh - ${mainPanelOverlap}rem)`

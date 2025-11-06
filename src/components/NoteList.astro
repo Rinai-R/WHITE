@@ -39,7 +39,9 @@ function getMonthLabel(monthNumber: number): string {
 	if (!Number.isFinite(monthNumber) || monthNumber < 1 || monthNumber > 12) {
 		return monthNumber.toString();
 	}
-	return monthNames[Math.max(0, Math.min(monthNames.length - 1, monthNumber - 1))];
+	return monthNames[
+		Math.max(0, Math.min(monthNames.length - 1, monthNumber - 1))
+	];
 }
 
 const notes = await Promise.all(

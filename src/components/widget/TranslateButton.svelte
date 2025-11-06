@@ -1,7 +1,11 @@
 <script lang="ts">
-import { LANGUAGE_CHANGE_EVENT, getCurrentLanguage, setCurrentLanguage } from "@/i18n/translation";
 import Icon from "@iconify/svelte";
 import { onDestroy, onMount } from "svelte";
+import {
+	getCurrentLanguage,
+	LANGUAGE_CHANGE_EVENT,
+	setCurrentLanguage,
+} from "@/i18n/translation";
 
 type LanguageOption = {
 	code: string;
@@ -47,7 +51,10 @@ function selectLanguage(code: string) {
 function handleClickOutside(event: MouseEvent) {
 	if (!isOpen || !translatePanel) return;
 	const target = event.target as HTMLElement;
-	if (!translatePanel.contains(target) && !target.closest("#translate-switch")) {
+	if (
+		!translatePanel.contains(target) &&
+		!target.closest("#translate-switch")
+	) {
 		isOpen = false;
 		translatePanel.classList.add("float-panel-closed");
 	}
