@@ -1,0 +1,154 @@
+﻿---
+import { siteConfig } from "../../config";
+import type { SiteConfig } from "../../types/config";
+
+interface Props {
+	config: SiteConfig["wallpaper"];
+	className?: string;
+	class?: string;
+}
+
+const { config, className, class: classProp } = Astro.props;
+
+const toArray = (value: string | string[] | undefined | null): string[] => {
+	if (!value) return [];
+	return Array.isArray(value) ? value : [value];
+};
+
+const resolveSources = async () => {
+	let source = config.src;
+
+	if (siteConfig.wallpaper.imageApi?.enable && siteConfig.wallpaper.imageApi?.url) {
+		try {
+			const response = await fetch(siteConfig.wallpaper.imageApi.url);
+			const text = await response.text();
+			const apiImages = text.split("\n").map((line) => line.trim()).filter(Boolean);
+			if (apiImages.length > 0) {
+				return {
+					desktop: apiImages,
+					mobile: apiImages,
+				};
+			}
+		} catch (error) {
+			console.warn("Failed to fetch images from API for wallpaper:", error);
+		}
+	}
+
+	if (
+		typeof source === "object" &&
+		source !== null &&
+		!Array.isArray(source) &&
+		("desktop" in source || "mobile" in source)
+	) {
+		const desktopImages = toArray(source.desktop);
+		const mobileImages = toArray(source.mobile);
+		return {
+			desktop: desktopImages.length > 0 ? desktopImages : mobileImages,
+			mobile: mobileImages.length > 0 ? mobileImages : desktopImages,
+		};
+	}
+
+	const baseImages = toArray(source as string | string[]);
+	return {
+		desktop: baseImages,
+		mobile: baseImages,
+	};
+};
+
+const imageSources = await resolveSources();
+const desktopImages = imageSources.desktop;
+const mobileImages = imageSources.mobile;
+
+const isCarouselEnabled =
+	Boolean(config.carousel?.enable) && (desktopImages.length > 1 || mobileImages.length > 1);
+const carouselInterval = config.carousel?.interval || 5;
+
+const position = config.position || "center";
+const zIndex = config.fullscreen?.zIndex ?? -1;
+const opacity = config.fullscreen?.opacity ?? 0.8;
+const blur = config.fullscreen?.blur ?? 0;
+
+const getPositionClass = (pos: string) => {
+	switch (pos) {
+		case "top":
+			return "object-top";
+		case "bottom":
+			return "object-bottom";
+		default:
+			return "object-center";
+	}
+};
+
+const positionClass = getPositionClass(position);
+---
+
+<div
+	class:list={[
+		"fixed inset-0 w-full h-full overflow-hidden pointer-events-none",
+		className,
+		classProp
+	]}
+	style={`z-index: ${zIndex}; opacity: ${opacity};`}
+	data-fullscreen-wallpaper
+>
+	<div class="hidden lg:block w-full h-full relative">
+		{desktopImages.map((src, index) => (
+			<img
+				src={src}
+				alt={`Desktop wallpaper ${index + 1}`}
+				class={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${positionClass}`}
+				data-carousel-item={isCarouselEnabled ? index : undefined}
+				style={blur > 0 ? `filter: blur(${blur}px);` : undefined}
+			/>
+		))}
+	</div>
+
+	<div class="block lg:hidden w-full h-full relative">
+		{mobileImages.map((src, index) => (
+			<img
+				src={src}
+				alt={`Mobile wallpaper ${index + 1}`}
+				class={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${positionClass}`}
+				data-carousel-item={isCarouselEnabled ? index : undefined}
+				style={blur > 0 ? `filter: blur(${blur}px);` : undefined}
+			/>
+		))}
+	</div>
+</div>
+
+{isCarouselEnabled && (
+	<script define:vars={{ carouselInterval }}>
+	// @ts-nocheck
+	function initFullscreenWallpaperCarousel() {
+		const wallpaperContainer = document.querySelector('[data-fullscreen-wallpaper]');
+		if (!wallpaperContainer) return;
+
+		const desktopItems = wallpaperContainer.querySelectorAll('.hidden.lg\\:block [data-carousel-item]');
+		const mobileItems = wallpaperContainer.querySelectorAll('.block.lg\\:hidden [data-carousel-item]');
+
+		const startCarousel = (items) => {
+			if (!items || items.length <= 1) return;
+
+			let currentIndex = 0;
+			items.forEach((item, index) => {
+				item.style.opacity = index === 0 ? '1' : '0';
+			});
+
+			setInterval(() => {
+				items[currentIndex].style.opacity = '0';
+				currentIndex = (currentIndex + 1) % items.length;
+				items[currentIndex].style.opacity = '1';
+			}, carouselInterval * 1000);
+		};
+
+		startCarousel(desktopItems);
+		startCarousel(mobileItems);
+	}
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', initFullscreenWallpaperCarousel);
+	} else {
+		initFullscreenWallpaperCarousel();
+	}
+	</script>
+)}

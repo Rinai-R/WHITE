@@ -5,13 +5,16 @@ import Navbar from "@components/Navbar.astro";
 import SideBar from "@components/widget/SideBar.astro";
 import type { MarkdownHeading } from "astro";
 import { Icon } from "astro-icon/components";
-import ImageWrapper from "../components/misc/ImageWrapper.astro";
+import Banner from "../components/misc/Banner.astro";
+import FullscreenWallpaper from "../components/misc/FullscreenWallpaper.astro";
 import TOC from "../components/widget/TOC.astro";
 import { siteConfig } from "../config";
 import {
 	BANNER_HEIGHT,
-	BANNER_HEIGHT_EXTEND,
+	BANNER_WAVE_HEIGHT,
 	MAIN_PANEL_OVERLAPS_BANNER_HEIGHT,
+	WALLPAPER_BANNER,
+	WALLPAPER_FULLSCREEN,
 } from "../constants/constants";
 import Layout from "./Layout.astro";
 
@@ -24,6 +27,43 @@ interface Props {
 	headings?: MarkdownHeading[];
 }
 
+const wallpaperMode = siteConfig.wallpaper.mode ?? WALLPAPER_BANNER;
+const isBannerMode = wallpaperMode === WALLPAPER_BANNER;
+const isFullscreenMode = wallpaperMode === WALLPAPER_FULLSCREEN;
+
+const isHomePage = Astro.url.pathname === "/" || Astro.url.pathname === "";
+const mobileNonHomeBannerClass = !isHomePage ? "mobile-hide-banner" : "";
+
+const toArray = (value: string | string[] | undefined) => {
+	if (!value) return [];
+	return Array.isArray(value) ? value : [value];
+};
+
+const resolveBannerImages = () => {
+	const src = siteConfig.wallpaper.src;
+	if (
+		typeof src === "object" &&
+		src !== null &&
+		!Array.isArray(src) &&
+		("desktop" in src || "mobile" in src)
+	) {
+		const desktop = toArray(src.desktop);
+		const mobile = toArray(src.mobile);
+		return {
+			desktop: desktop.length > 0 ? desktop : mobile,
+			mobile: mobile.length > 0 ? mobile : desktop,
+		};
+	}
+	const images = toArray(src as string | string[]);
+	return {
+		desktop: images,
+		mobile: images,
+	};
+};
+
+const bannerImages = resolveBannerImages();
+const carouselConfig = siteConfig.wallpaper.carousel || { enable: false, interval: 6 };
+
 const {
 	title,
 	banner,
@@ -32,12 +72,16 @@ const {
 	setOGTypeArticle,
 	headings = [],
 } = Astro.props;
-const hasBannerCredit =
-	siteConfig.banner.enable && siteConfig.banner.credit.enable;
-const hasBannerLink = !!siteConfig.banner.credit.url;
 
-const mainPanelTop = siteConfig.banner.enable
-	? `calc(${BANNER_HEIGHT}vh - ${MAIN_PANEL_OVERLAPS_BANNER_HEIGHT}rem)`
+const hasBannerCredit =
+	isBannerMode && !!siteConfig.wallpaper.banner?.credit?.enable;
+const hasBannerLink = !!siteConfig.wallpaper.banner?.credit?.url;
+
+const mainPanelOverlap =
+	Math.max(MAIN_PANEL_OVERLAPS_BANNER_HEIGHT - BANNER_WAVE_HEIGHT, 0);
+
+const mainPanelTop = isBannerMode
+	? `calc(${BANNER_HEIGHT}vh - ${mainPanelOverlap}rem)`
 	: "5.5rem";
 ---
 
@@ -45,6 +89,7 @@ const mainPanelTop = siteConfig.banner.enable
 
 <!-- Navbar -->
 <slot slot="head" name="head"></slot>
+{isFullscreenMode && <FullscreenWallpaper config={siteConfig.wallpaper}></FullscreenWallpaper>}
 <div id="top-row" class="z-50 pointer-events-none relative transition-all duration-700 max-w-[var(--page-width)] px-0 md:px-4 mx-auto" class:list={[""]}>
     <div id="navbar-wrapper" class="pointer-events-auto sticky top-0 transition-all">
         <Navbar></Navbar>
@@ -52,27 +97,32 @@ const mainPanelTop = siteConfig.banner.enable
 </div>
 
 <!-- Banner -->
-{siteConfig.banner.enable && <div id="banner-wrapper" class={`absolute z-10 w-full transition duration-700 overflow-hidden`} style={`top: -${BANNER_HEIGHT_EXTEND}vh`}>
-    <ImageWrapper id="banner" alt="Banner image of the blog" class:list={["object-cover h-full transition duration-700 opacity-0 scale-105"]}
-                  src={siteConfig.banner.src} position={siteConfig.banner.position}
-    >
-    </ImageWrapper>
-</div>}
+{isBannerMode && (
+    <Banner
+        config={siteConfig.wallpaper}
+        bannerImages={bannerImages}
+        isHomePage={isHomePage}
+        mobileNonHomeBannerClass={mobileNonHomeBannerClass}
+        carouselConfig={carouselConfig}
+    ></Banner>
+)}
 
 <!-- Main content -->
-<div class="absolute w-full z-30 pointer-events-none" style={`top: ${mainPanelTop}`}>
+<div class="absolute w-full z-30 pointer-events-none"
+     class:list={[{"mobile-main-no-banner": !isHomePage && isBannerMode, "no-banner-layout": !isBannerMode}]}
+     style={`top: ${mainPanelTop}`}>
     <!-- The pointer-events-none here prevent blocking the click event of the TOC -->
     <div class="relative max-w-[var(--page-width)] mx-auto pointer-events-auto">
         <div id="main-grid" class="transition duration-700 w-full left-0 right-0 grid grid-cols-[17.5rem_auto] grid-rows-[auto_1fr_auto] lg:grid-rows-[auto]
     mx-auto gap-4 px-0 md:px-4"
         >
             <!-- Banner image credit -->
-            {hasBannerCredit && <a href={siteConfig.banner.credit.url} id="banner-credit" target="_blank" rel="noopener" aria-label="Visit image source"
+            {hasBannerCredit && <a href={siteConfig.wallpaper.banner?.credit?.url || "#"} id="banner-credit" target={hasBannerLink ? "_blank" : undefined} rel={hasBannerLink ? "noopener" : undefined} aria-label="Visit image source"
                                    class:list={["group onload-animation transition-all absolute flex justify-center items-center rounded-full " +
                                    "px-3 right-4 -top-[3.25rem] bg-black/60 hover:bg-black/70 h-9", {"hover:pr-9 active:bg-black/80": hasBannerLink}]}
             >
                 <Icon class="text-white/75 text-[1.25rem] mr-1" name="material-symbols:copyright-outline-rounded" ></Icon>
-                <div class="text-white/75 text-xs">{siteConfig.banner.credit.text}</div>
+                <div class="text-white/75 text-xs">{siteConfig.wallpaper.banner?.credit?.text}</div>
                 <Icon class:list={["transition absolute text-[oklch(0.75_0.14_var(--hue))] right-4 text-[0.75rem] opacity-0",
                     {"group-hover:opacity-100": hasBannerLink}]}
                       name="fa6-solid:arrow-up-right-from-square">
@@ -107,7 +157,7 @@ const mainPanelTop = siteConfig.banner.enable
     <div class="relative max-w-[var(--page-width)] mx-auto">
         <!-- TOC component -->
         {siteConfig.toc.enable && <div id="toc-wrapper" class:list={["hidden lg:block transition absolute top-0 -right-[var(--toc-width)] w-[var(--toc-width)] items-center",
-            {"toc-hide": siteConfig.banner.enable}]}
+            {"toc-hide": isBannerMode}]}
         >
             <div id="toc-inner-wrapper" class="fixed top-14 w-[var(--toc-width)] h-[calc(100vh_-_20rem)] overflow-y-scroll overflow-x-hidden hide-scrollbar">
                 <div id="toc" class="w-full h-full transition-swup-fade ">

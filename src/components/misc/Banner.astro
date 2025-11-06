@@ -1,0 +1,301 @@
+﻿---
+import { Icon } from "astro-icon/components";
+import ImageWrapper from "./ImageWrapper.astro";
+import TypewriterText from "../TypewriterText.astro";
+import { BANNER_HEIGHT_EXTEND } from "../../constants/constants";
+import type { SiteConfig } from "../../types/config";
+
+interface Props {
+	config: SiteConfig["wallpaper"];
+	bannerImages: {
+		desktop: string | string[];
+		mobile: string | string[];
+	};
+	isHomePage: boolean;
+	mobileNonHomeBannerClass: string;
+	carouselConfig?: {
+		enable?: boolean;
+		interval?: number;
+	};
+	class?: string;
+}
+
+const { config, bannerImages, isHomePage, mobileNonHomeBannerClass, carouselConfig, class: className } = Astro.props;
+
+const toArray = (value: string | string[] | undefined | null): string[] => {
+	if (!value) return [];
+	return Array.isArray(value) ? value : [value];
+};
+
+const desktopList = toArray(bannerImages.desktop);
+const mobileList = toArray(bannerImages.mobile);
+
+const carouselEntries = Array.from(
+	{ length: Math.max(desktopList.length, mobileList.length) },
+	(_, index) => ({
+		desktop: desktopList[index] ?? "",
+		mobile: mobileList[index] ?? "",
+	}),
+).filter(({ desktop, mobile }) => desktop || mobile);
+
+const isCarousel = carouselEntries.length > 1;
+const fallbackDesktop = desktopList[0] ?? mobileList[0] ?? "";
+const fallbackMobile = mobileList[0] ?? desktopList[0] ?? "";
+
+const showHomeText = Boolean(config.banner?.homeText?.enable && isHomePage);
+const homeTitle = config.banner?.homeText?.title;
+const homeSubtitle = config.banner?.homeText?.subtitle;
+const typewriter = config.banner?.homeText?.typewriter;
+
+const credit = config.banner?.credit;
+const showCredit = Boolean(credit?.enable && credit?.text);
+const creditUrl = credit?.url;
+---
+
+<!-- Banner Wrapper -->
+<div
+	id="banner-wrapper"
+	class={`absolute z-10 w-full transition duration-700 overflow-hidden ${mobileNonHomeBannerClass} ${className || ""}`}
+	style={`top: -${BANNER_HEIGHT_EXTEND}vh`}
+>
+	{/* Carousel mode */}
+	{isCarousel ? (
+		<div id="banner-carousel" class="relative h-full w-full" data-carousel-config={JSON.stringify(carouselConfig)}>
+			<ul class="carousel-list h-full w-full">
+				{carouselEntries.map(({ desktop, mobile }, index) => (
+					<li class={`carousel-item absolute inset-0 transition-all duration-500 ${index === 0 ? "opacity-100 scale-100" : "opacity-0 scale-110"}`}>
+						{mobile && (
+							<ImageWrapper
+								alt={`Mobile banner image ${index + 1}`}
+								class:list={["block lg:hidden object-cover h-full w-full transition-transform duration-500 ease-out"]}
+								src={mobile}
+								position={config.position}
+							/>
+						)}
+						{desktop && (
+							<ImageWrapper
+								alt={`Desktop banner image ${index + 1}`}
+								class:list={["hidden lg:block object-cover h-full w-full transition-transform duration-500 ease-out"]}
+								src={desktop}
+								position={config.position}
+							/>
+						)}
+					</li>
+				))}
+			</ul>
+		</div>
+	) : (
+		<div class="relative h-full w-full">
+			<ImageWrapper
+				alt="Mobile banner image of the blog"
+				class:list={["block lg:hidden object-cover h-full w-full transition duration-700 opacity-100"]}
+				src={fallbackMobile}
+				position={config.position}
+			/>
+			<ImageWrapper
+				id="banner"
+				alt="Desktop banner image of the blog"
+				class:list={["hidden lg:block object-cover h-full transition duration-700 opacity-100"]}
+				src={fallbackDesktop}
+				position={config.position}
+			/>
+		</div>
+	)}
+
+	{/* Home banner copy */}
+	{showHomeText && (
+		<div class="banner-text-overlay absolute inset-0 z-20 flex items-center justify-center">
+			<div class="w-4/5 lg:w-3/4 text-center mb-0">
+				<div class="flex flex-col">
+					{homeTitle && (
+						<h1 class="banner-title text-6xl lg:text-8xl text-white drop-shadow-lg mb-2 lg:mb-4">
+							{homeTitle}
+						</h1>
+					)}
+					{homeSubtitle && (
+						<h2 class="banner-subtitle text-xl lg:text-3xl text-white/90 drop-shadow-md">
+							{typewriter?.enable ? (
+								<TypewriterText
+									text={homeSubtitle}
+									speed={typewriter.speed}
+									deleteSpeed={typewriter.deleteSpeed}
+									pauseTime={typewriter.pauseTime}
+								/>
+							) : Array.isArray(homeSubtitle) ? homeSubtitle[0] : homeSubtitle}
+						</h2>
+					)}
+				</div>
+			</div>
+		</div>
+	)}
+
+	{/* Banner credit */}
+	{showCredit && (
+		<a
+			class="banner-credit absolute bottom-6 right-6 z-30 inline-flex items-center gap-2 rounded-full bg-black/45 px-4 py-2 text-sm text-white/80 transition hover:bg-black/60"
+			href={creditUrl || undefined}
+			target={creditUrl ? "_blank" : undefined}
+			rel={creditUrl ? "noopener" : undefined}
+		>
+			<Icon name="material-symbols:copyright-outline-rounded" class="text-base" />
+			<span>{credit?.text}</span>
+			{creditUrl && <Icon name="fa6-solid:arrow-up-right-from-square" class="text-xs" />}
+		</a>
+	)}
+
+	<!-- Water waves effect -->
+	<div class="waves absolute -bottom-[1px] h-[10vh] max-h-[9.375rem] min-h-[3.125rem] w-full md:h-[15vh]" id="header-waves" style="transform: translateZ(0); will-change: fill;">
+		<svg
+			class="waves"
+			xmlns="http://www.w3.org/2000/svg"
+			xmlns:xlink="http://www.w3.org/1999/xlink"
+			viewBox="0 20 150 32"
+			preserveAspectRatio="none"
+			shape-rendering="auto"
+			style="transform: translateZ(0); backface-visibility: hidden;"
+		>
+			<defs>
+				<path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v48h-352z"></path>
+			</defs>
+			<g class="parallax" style="transform: translateZ(0);">
+				<use xlink:href="#gentle-wave" x="48" y="0" class="opacity-25 fill-[var(--page-bg)]" style="animation-delay: -2s; animation-duration: 7s; will-change: transform;"></use>
+				<use xlink:href="#gentle-wave" x="48" y="3" class="opacity-50 fill-[var(--page-bg)]" style="animation-delay: -3s; animation-duration: 10s; will-change: transform;"></use>
+				<use xlink:href="#gentle-wave" x="48" y="5" class="opacity-75 fill-[var(--page-bg)]" style="animation-delay: -4s; animation-duration: 13s; will-change: transform;"></use>
+				<use xlink:href="#gentle-wave" x="48" y="7" class="fill-[var(--page-bg)]" style="animation-delay: -5s; animation-duration: 20s; will-change: transform;"></use>
+			</g>
+		</svg>
+	</div>
+</div>
+
+<script>
+// @ts-nocheck
+	function showBannerImage() {
+		const banner = document.getElementById('banner');
+		if (banner) {
+			banner.classList.remove('opacity-0', 'scale-105');
+		}
+
+		const mobileBanner = document.querySelector('.block.lg\\:hidden[alt="Mobile banner image of the blog"]');
+		if (mobileBanner && !document.getElementById('banner-carousel')) {
+			mobileBanner.classList.remove('opacity-0', 'scale-105');
+			mobileBanner.classList.add('opacity-100');
+		}
+	}
+
+	function initCarousel() {
+		const carousel = document.getElementById('banner-carousel');
+		if (!carousel) return;
+
+	const rawConfig = carousel.getAttribute('data-carousel-config');
+	const config = rawConfig ? JSON.parse(rawConfig) : {};
+
+	const allItems = Array.from(carousel.querySelectorAll('.carousel-item'));
+	if (allItems.length <= 1 || !config?.enable) {
+		return;
+	}
+
+	function hideAll() {
+		allItems.forEach((item) => {
+			item.classList.add('opacity-0', 'scale-110');
+			item.classList.remove('opacity-100', 'scale-100');
+		});
+	}
+
+	/**
+	 * @param {HTMLElement} item
+	 */
+	function showItem(item) {
+		item.classList.add('opacity-100', 'scale-100');
+		item.classList.remove('opacity-0', 'scale-110');
+	}
+
+	hideAll();
+	showItem(allItems[0]);
+
+	const interval = (config.interval ?? 6) * 1000;
+	let timer = window.setInterval(next, interval);
+	let paused = false;
+	let currentIndex = 0;
+
+	function next() {
+		if (paused) return;
+		currentIndex = (currentIndex + 1) % allItems.length;
+		switchTo(currentIndex);
+	}
+
+	/**
+	 * @param {number} index
+	 */
+	function switchTo(index) {
+		hideAll();
+		showItem(allItems[index]);
+	}
+
+	function pause() {
+		if (paused) return;
+		paused = true;
+		clearInterval(timer);
+	}
+
+	function resume() {
+		if (!paused) return;
+		paused = false;
+		timer = window.setInterval(next, interval);
+	}
+
+		carousel.addEventListener('mouseenter', pause);
+		carousel.addEventListener('mouseleave', resume);
+
+		let startX = 0;
+		let startY = 0;
+		let swiping = false;
+
+		carousel.addEventListener('touchstart', (e) => {
+			startX = e.touches[0].clientX;
+			startY = e.touches[0].clientY;
+			swiping = false;
+			pause();
+		}, { passive: true });
+
+		carousel.addEventListener('touchmove', (e) => {
+			if (!startX || !startY) return;
+			const diffX = Math.abs(e.touches[0].clientX - startX);
+			const diffY = Math.abs(e.touches[0].clientY - startY);
+			if (diffX > diffY && diffX > 30) {
+				swiping = true;
+				e.preventDefault();
+			}
+		}, { passive: false });
+
+		carousel.addEventListener('touchend', (e) => {
+		if (!swiping) {
+			resume();
+			return;
+		}
+
+			const diffX = startX - e.changedTouches[0].clientX;
+			if (Math.abs(diffX) > 50) {
+				const delta = diffX > 0 ? 1 : -1;
+				currentIndex = (currentIndex + delta + allItems.length) % allItems.length;
+				switchTo(currentIndex);
+			}
+
+		startX = 0;
+		startY = 0;
+		swiping = false;
+		resume();
+	}, { passive: true });
+}
+
+	function initBanner() {
+		showBannerImage();
+		initCarousel();
+	}
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', initBanner);
+	} else {
+		initBanner();
+	}
+</script>
+
