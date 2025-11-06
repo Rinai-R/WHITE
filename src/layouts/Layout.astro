@@ -317,7 +317,7 @@ function disableAnimation() {
 
 const bannerEnabled = !!document.getElementById('banner-wrapper')
 
-let swupRecoveryTimer: ReturnType<typeof setTimeout> | undefined;
+let swupRecoveryTimer: number | undefined;
 
 function clearAnimationFlags() {
 	if (swupRecoveryTimer) {
