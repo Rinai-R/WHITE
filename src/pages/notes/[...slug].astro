@@ -18,8 +18,7 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props;
-const displayTitle =
-	(entry.data.title && entry.data.title.trim()) || i18n(I18nKey.untitled);
+const displayTitle = entry.data.title?.trim() || i18n(I18nKey.untitled);
 
 const { Content, headings, remarkPluginFrontmatter } = await entry.render();
 

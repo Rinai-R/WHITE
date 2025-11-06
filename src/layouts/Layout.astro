@@ -317,6 +317,23 @@ function disableAnimation() {
 
 const bannerEnabled = !!document.getElementById('banner-wrapper')
 
+let swupRecoveryTimer: ReturnType<typeof setTimeout> | undefined;
+
+function clearAnimationFlags() {
+	if (swupRecoveryTimer) {
+		clearTimeout(swupRecoveryTimer);
+		swupRecoveryTimer = undefined;
+	}
+	document.documentElement.classList.remove('is-changing', 'is-animating');
+}
+
+function scheduleSwupRecovery() {
+	if (swupRecoveryTimer) {
+		clearTimeout(swupRecoveryTimer);
+	}
+	swupRecoveryTimer = window.setTimeout(clearAnimationFlags, 2000);
+}
+
 function setClickOutsideToClose(panel: string, ignores: string[]) {
 	document.addEventListener("click", event => {
 		const panelDom = document.getElementById(panel);
@@ -467,8 +484,14 @@ const setup = () => {
 	})
 	window.swup.hooks.on('content:replace', () => {
 		initCustomScrollbar();
+		scheduleSwupRecovery();
+	});
+	window.swup.hooks.on('visit:error', (visit: {to: {url: string}}) => {
+		clearAnimationFlags();
+		window.location.href = visit.to.url;
 	});
 	window.swup.hooks.on('visit:start', (visit: {to: {url: string}}) => {
+		scheduleSwupRecovery();
 		// change banner height immediately when a link is clicked
 		const bodyElement = document.querySelector('body')
 		if (pathsEqual(visit.to.url, url('/'))) {
@@ -503,6 +526,7 @@ const setup = () => {
 				heightExtend.classList.add('hidden')
 			}
 
+			clearAnimationFlags();
             // Just make the transition looks better
             const toc = document.getElementById('toc-wrapper');
             if (toc) {

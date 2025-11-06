@@ -15,8 +15,7 @@ interface Props {
 const { entry, style = "" } = Astro.props;
 const className = Astro.props.class;
 
-const noteTitle =
-	(entry.data.title && entry.data.title.trim()) || i18n(I18nKey.untitled);
+const noteTitle = entry.data.title?.trim() || i18n(I18nKey.untitled);
 
 const { Content } = await entry.render();
 ---
