@@ -113,7 +113,7 @@ const mainPanelTop = isBannerMode
 )}
 
 <!-- Main content -->
-<div class="absolute w-full z-30 pointer-events-none"
+<div id="main-content-layer" class="absolute w-full z-30 pointer-events-none"
      class:list={[{"mobile-main-no-banner": !isHomePage && isBannerMode, "no-banner-layout": !isBannerMode}]}
      style={`top: ${mainPanelTop}`}>
     <!-- The pointer-events-none here prevent blocking the click event of the TOC -->

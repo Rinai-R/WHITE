@@ -686,3 +686,23 @@
     }
 }
 
+/* ----- Mobile main content positioning adjustments ----- */
+@media (max-width: 768px) {
+    body.enable-banner #main-content-layer {
+        position: static !important;
+        top: auto !important;
+        pointer-events: auto !important;
+        margin-top: clamp(3.5rem, 28vh, 9rem);
+        padding-left: clamp(0.85rem, 4vw, 1.35rem);
+        padding-right: clamp(0.85rem, 4vw, 1.35rem);
+    }
+
+    body.enable-banner #main-content-layer.mobile-main-no-banner {
+        margin-top: clamp(1.75rem, 16vh, 5rem);
+    }
+
+    #top-row {
+        padding-left: clamp(0.65rem, 4vw, 1.1rem);
+        padding-right: clamp(0.65rem, 4vw, 1.1rem);
+    }
+}
