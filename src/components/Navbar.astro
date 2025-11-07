@@ -9,6 +9,7 @@ import Search from "./Search.svelte";
 import DisplaySettings from "./widget/DisplaySettings.svelte";
 import DropdownMenu from "./widget/DropdownMenu.astro";
 import TranslateButton from "./widget/TranslateButton.svelte";
+import NavMenuPanel from "./widget/NavMenuPanel.astro";
 
 const className = Astro.props.class;
 
@@ -51,8 +52,12 @@ let links: NavBarLink[] = navBarConfig.links.map(
       <div class="hidden sm:block">
         <LightDarkSwitch client:only="svelte"></LightDarkSwitch>
       </div>
+      <button aria-label="Menu" class="btn-plain scale-animation rounded-lg w-11 h-11 active:scale-90 md:hidden" id="nav-menu-switch">
+        <Icon name="material-symbols:menu-rounded" class="text-[1.25rem]"></Icon>
+      </button>
     </div>
     <DisplaySettings client:only="svelte"></DisplaySettings>
+    <NavMenuPanel links={links}></NavMenuPanel>
   </div>
 </div>
 
@@ -163,8 +168,7 @@ function closeAllDropdowns() {
 
 function toggleDropdown(dropdown, trigger, menu) {
   const isOpen = trigger.getAttribute('aria-expanded') === 'true';
-  if (isOpen) closeDropdown(dropdown, trigger, menu);
-  else openDropdown(dropdown, trigger, menu);
+  if (isOpen) closeDropdown(dropdown, trigger, menu); else openDropdown(dropdown, trigger, menu);
 }
 function openDropdown(dropdown, trigger, menu) {
   trigger.setAttribute('aria-expanded', 'true');
@@ -179,39 +183,33 @@ function closeDropdown(dropdown, trigger, menu) {
 
 function bindDisplaySettings() {
   const btn = document.getElementById('display-settings-switch');
-  if (!btn) return;
-
-  const attach = () => {
-    if (btn.dataset.bound === '1') return;
-    btn.addEventListener('click', () => {
-      const panelEl = document.getElementById('display-setting');
-      if (!panelEl) return;
-      panelEl.classList.toggle('float-panel-closed');
-    });
-    btn.dataset.bound = '1';
-  };
-
   const panel = document.getElementById('display-setting');
-  if (panel) {
-    attach();
-    if (window.__displaySettingsObserver) {
-      window.__displaySettingsObserver.disconnect();
-      window.__displaySettingsObserver = undefined;
-    }
-    return;
-  }
+  if (!btn || !panel) return;
+  if (btn.dataset.bound === '1') return;
+  btn.addEventListener('click', () => {
+    panel.classList.toggle('float-panel-closed');
+  });
+  btn.dataset.bound = '1';
+}
 
-  if (!window.__displaySettingsObserver) {
-    const observer = new MutationObserver(() => {
-      const nextPanel = document.getElementById('display-setting');
-      if (nextPanel) {
-        attach();
-        observer.disconnect();
-        window.__displaySettingsObserver = undefined;
+function bindNavMenu() {
+  const btn = document.getElementById('nav-menu-switch');
+  const panel = document.getElementById('nav-menu-panel');
+  if (!btn || !panel) return;
+  if (btn.dataset.bound === '1') return;
+  btn.addEventListener('click', (event) => {
+    event.preventDefault();
+    panel.classList.toggle('float-panel-closed');
+  });
+  btn.dataset.bound = '1';
+
+  if (!window.__navMenuOutsideHandler) {
+    window.__navMenuOutsideHandler = (event) => {
+      if (!panel.contains(event.target) && event.target !== btn && !btn.contains(event.target)) {
+        panel.classList.add('float-panel-closed');
       }
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-    window.__displaySettingsObserver = observer;
+    };
+    document.addEventListener('click', window.__navMenuOutsideHandler);
   }
 }
 
@@ -240,8 +238,7 @@ function initSemifullScrollDetection() {
   const isHome = navbar.getAttribute('data-is-home') === 'true';
   const threshold = 12;
   const applyScrolledState = (active) => {
-    if (active) navbar.classList.add('scrolled');
-    else navbar.classList.remove('scrolled');
+    if (active) navbar.classList.add('scrolled'); else navbar.classList.remove('scrolled');
   };
   if (!isHome) { applyScrolledState(true); return; }
 
@@ -251,7 +248,12 @@ function initSemifullScrollDetection() {
     applyScrolledState(scrollTop > threshold);
     ticking = false;
   }
-  function requestTick() { if (!ticking) { requestAnimationFrame(updateNavbarState); ticking = true; } }
+  function requestTick() {
+    if (!ticking) {
+      requestAnimationFrame(updateNavbarState);
+      ticking = true;
+    }
+  }
 
   semifullScrollHandler = requestTick;
   window.addEventListener('scroll', requestTick, { passive: true });
@@ -261,6 +263,7 @@ function initSemifullScrollDetection() {
 function initNavbar() {
   bindDropdowns();
   bindDisplaySettings();
+  bindNavMenu();
   initSemifullScrollDetection();
 }
 
