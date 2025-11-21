@@ -24,12 +24,23 @@ const isLocal = !(
 );
 const isPublic = src.startsWith("/");
 
-// TODO temporary workaround for images dynamic import
-// https://github.com/withastro/astro/issues/3373
-// biome-ignore lint/suspicious/noImplicitAnyLet: <check later>
-let img;
+const extension = (() => {
+	try {
+		const s = src.split("?")[0];
+		return s.slice(s.lastIndexOf(".") + 1).toLowerCase();
+	} catch (e) {
+		return "";
+	}
+})();
+
+const videoExts = ["mp4", "webm", "ogg"];
+const imageExts = ["png", "jpg", "jpeg", "avif", "webp", "svg", "gif"];
+const isVideo = videoExts.includes(extension);
+const isImage = imageExts.includes(extension) || (!extension && !isVideo);
+
+let asset: string | Record<string, unknown> | undefined;
 if (isLocal) {
-	const files = import.meta.glob<ImageMetadata>("../../**", {
+	const files = import.meta.glob("../../**", {
 		import: "default",
 	});
 	let normalizedPath = path
@@ -38,17 +49,64 @@ if (isLocal) {
 	const file = files[normalizedPath];
 	if (!file) {
 		console.error(
-			`\n[ERROR] Image file not found: ${normalizedPath.replace("../../", "src/")}`,
+			`\n[ERROR] Asset file not found: ${normalizedPath.replace("../../", "src/")}`,
 		);
+	} else {
+		asset = (await file()) as string | Record<string, unknown>;
 	}
-	img = await file();
 }
 
 const imageClass = "w-full h-full object-cover";
 const imageStyle = `object-position: ${position}`;
 ---
-<div id={id} class:list={[className, 'overflow-hidden relative']}>
-    <div class="transition absolute inset-0 dark:bg-black/10 bg-opacity-50 pointer-events-none"></div>
-    {isLocal && img && <Image src={img} alt={alt || ""} class={imageClass} style={imageStyle}/>}
-    {!isLocal && <img src={isPublic ? url(src) : src} alt={alt || ""} class={imageClass} style={imageStyle}/>}
+<div id={id} data-alt={alt || ''} class:list={[className, 'overflow-hidden relative']}>
+	<div class="transition absolute inset-0 dark:bg-black/10 bg-opacity-50 pointer-events-none"></div>
+
+	{/** Local asset */}
+	{isLocal && asset && isVideo && (
+		(() => {
+			const assetUrl = typeof asset === 'string' ? asset : (asset as any)?.src ?? (asset as any);
+			return (
+				<video
+					src={assetUrl}
+					class="w-full h-full object-cover"
+					aria-label={alt || ''}
+					role="img"
+					autoplay
+					muted
+					loop
+					playsinline
+				/>
+			);
+		})()
+	)}
+
+	{isLocal && asset && !isVideo && (
+		(() => {
+			if (typeof asset !== 'string') {
+				// asset is likely an object returned by import; pass through to Astro Image
+				return <Image src={asset as any} alt={alt || ""} class={imageClass} style={imageStyle}/>;
+			}
+			// Fallback to plain <img> if asset is a string
+			return <img src={asset} alt={alt || ""} class={imageClass} style={imageStyle}/>;
+		})()
+	)}
+
+	{/** Remote / public asset */}
+	{!isLocal && isVideo && (
+		<video
+			src={isPublic ? url(src) : src}
+			class="w-full h-full object-cover"
+			aria-label={alt || ''}
+			role="img"
+			autoplay
+			muted
+			loop
+			playsinline
+		/>
+	)}
+
+	{!isLocal && !isVideo && (
+		<img src={isPublic ? url(src) : src} alt={alt || ""} class={imageClass} style={imageStyle}/>
+	)}
 </div>

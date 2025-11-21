@@ -1,9 +1,9 @@
 ﻿---
 import { Icon } from "astro-icon/components";
-import ImageWrapper from "./ImageWrapper.astro";
-import TypewriterText from "../TypewriterText.astro";
 import { BANNER_HEIGHT_EXTEND } from "../../constants/constants";
 import type { SiteConfig } from "../../types/config";
+import TypewriterText from "../TypewriterText.astro";
+import ImageWrapper from "./ImageWrapper.astro";
 
 interface Props {
 	config: SiteConfig["wallpaper"];
@@ -20,7 +20,14 @@ interface Props {
 	class?: string;
 }
 
-const { config, bannerImages, isHomePage, mobileNonHomeBannerClass, carouselConfig, class: className } = Astro.props;
+const {
+	config,
+	bannerImages,
+	isHomePage,
+	mobileNonHomeBannerClass,
+	carouselConfig,
+	class: className,
+} = Astro.props;
 
 const toArray = (value: string | string[] | undefined | null): string[] => {
 	if (!value) return [];
@@ -175,7 +182,7 @@ const creditUrl = credit?.url;
 			banner.classList.remove('opacity-0', 'scale-105');
 		}
 
-		const mobileBanner = document.querySelector('.block.lg\\:hidden[alt="Mobile banner image of the blog"]');
+		const mobileBanner = document.querySelector('[data-alt="Mobile banner image of the blog"]');
 		if (mobileBanner && !document.getElementById('banner-carousel')) {
 			mobileBanner.classList.remove('opacity-0', 'scale-105');
 			mobileBanner.classList.add('opacity-100');
