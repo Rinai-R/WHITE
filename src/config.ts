@@ -28,12 +28,8 @@ export const siteConfig: SiteConfig = {
 	wallpaper: {
 		mode: "banner",
 		src: {
-			desktop: [
-				"https://github.com/Rinai-R/WHITE/raw/refs/heads/main/src/assets/images/banner2.mp4",
-			],
-			mobile: [
-				"https://github.com/Rinai-R/WHITE/raw/refs/heads/main/src/assets/images/banner2.mp4",
-			],
+			desktop: ["assets/images/mono1.png"],
+			mobile: ["assets/images/mono1.png"],
 		},
 		position: "center",
 		carousel: {
