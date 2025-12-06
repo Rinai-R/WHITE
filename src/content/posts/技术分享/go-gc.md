@@ -451,11 +451,124 @@ func mallocgc(size uintptr, typ *_type, needzero bool) unsafe.Pointer {
 	// 当前是否在 GC mark 阶段且 write barrier 启用
 	// 如果需要，mutator（分配者）需要帮忙标记一些对象
 	if gcBlackenEnabled != 0 {
-		deductAssistCredit(size) // 扣除助理信用，并可能触发 gcDrain
+		deductAssistCredit(size) // 借款，并可能触发 gcDrain
 	}
 
 	...
 }
 ```
 
-通过上面的分析，我们可以发现，我们的 GC 是通过广度优先搜索的方式去从堆上扫描对象来进行回收，也就是说，如果堆上的内存小，但是对象多，就会给 GC 带来很大的压力，所以这就是我们需要进行逃逸分析，在一些情况下尽量避免内存逃逸到堆上，看完这部分源码我觉得《Go 语言设计与实现》讲的是真的不错，但是真的得自己再去看看源码才能把整个链路搞明白，光看书还是很糊里糊涂的。
+在这里借款之后，如果发现分配的 size 过大，哪怕是从全局借款中也没办法抵消债务，那么就会触发 gcDrainN，强制执行一部分标记工作，当然，如果还是不够，那么就会直接让这个 goroutine “坐牢”，即不能让他继续被 P 调度，同时放入 AssistQueue，这里的意思就是说，当前 goroutine 借款过多，无法继续调度，需要等待其他的 gcWorker 去执行标记工作，以此来生产借款到全局债务中，此时，我们又可以唤醒这些 AssistQueue 中的 goroutine，也就是让他们能够继续运行。总的来说，其实就是一个生产者消费者的协作模型，当一部分 goroutine 需要申请大量内存，而标记的 worker 速度跟不上的时候，此时就会阻塞这些 goroutine 进行执行，直到 gcworker 的速度跟上申请的速度，此时就会让他们继续执行，借款的链路为 gcAssistAlloc->gcParkAssist：
+```go
+// gcParkAssist 将当前的 goroutine 放入 assist 队列并将其挂起，
+// 直到满足 GC 协助条件。协助标记的任务由多个 goroutine 共同完成。
+// 
+// 当返回值为 true 时，表示该协助任务已经完成，goroutine 可继续执行。
+// 如果返回 false，说明协助任务还未完成，调用者应当重试协助。
+//
+// 该函数通过加锁、检查 GC 状态、挂起当前 goroutine 来保证协助任务的顺利进行。
+// 它帮助实现协作式垃圾回收，避免 GC 阻塞或资源浪费。
+func gcParkAssist() bool {
+    // 加锁以确保对 assistQueue 的操作是线程安全的
+    lock(&work.assistQueue.lock)
+
+    // 如果 GC 循环已经完成，则直接退出协助，返回 true
+    // 因为在持有锁时，GC 周期无法结束
+    if atomic.Load(&gcBlackenEnabled) == 0 {
+        unlock(&work.assistQueue.lock)
+        return true
+    }
+
+    // 获取当前的 goroutine（gp），并将其加入 assist 队列
+    gp := getg()
+    oldList := work.assistQueue.q
+    work.assistQueue.q.pushBack(gp)
+
+    // 重新检查背景扫描的 credit，以确保当前的挂起 goroutine 不会被漏掉
+    // 如果背景标记已生成足够的 credit，则可以让当前 goroutine 继续执行
+    if gcController.bgScanCredit.Load() > 0 {
+        // 恢复队列状态，取消挂起的 goroutine
+        work.assistQueue.q = oldList
+        if oldList.tail != 0 {
+            oldList.tail.ptr().schedlink.set(nil)
+        }
+        unlock(&work.assistQueue.lock)
+        return false
+    }
+
+    // 如果 credit 不够，挂起当前 goroutine
+    goparkunlock(&work.assistQueue.lock, waitReasonGCAssistWait, traceBlockGCMarkAssist, 2)
+    return true
+}
+```
+而我们的每次 gcWorker 执行了标记工作之后，都会去调用 `gcFlushBgCredit` 尝试去唤醒这些消费者：
+```go
+// gcFlushBgCredit 将指定数量的后台扫描工作单位（scanWork）信用刷新到后台扫描信用池。
+// 它首先会满足阻塞在工作队列中的 goroutine 的协助债务，然后将剩余的信用刷新到
+// gcController.bgScanCredit，供其他需要的协助任务使用。
+//
+// 由于这是由 gcDrain 使用，在执行时确保所有的工作都已完成，所以在该函数中不允许
+// 写入屏障。
+// 
+// 该函数的核心逻辑是分配信用并协助完成挂起的协助任务，保证 GC 协作过程的平衡。
+//go:nowritebarrierrec
+func gcFlushBgCredit(scanWork int64) {
+    // 如果 assist 队列为空，则表示没有待协助的 goroutine，直接将扫描工作信用加到后台信用池
+    if work.assistQueue.q.empty() {
+        // 快速路径；没有阻塞的协助任务。这里有一个小的窗口，如果有协助任务被加入并挂起，
+        // 它会在下一次调用时处理。
+        gcController.bgScanCredit.Add(scanWork)
+        return
+    }
+
+    // 计算每单位扫描工作需要多少字节的协助信用
+    assistBytesPerWork := gcController.assistBytesPerWork.Load()
+    scanBytes := int64(float64(scanWork) * assistBytesPerWork)
+
+    // 加锁，确保对 assistQueue 操作的线程安全
+    lock(&work.assistQueue.lock)
+
+    // 遍历队列中的所有阻塞 goroutine，尝试用当前扫描信用偿还它们的协助债务
+    for !work.assistQueue.q.empty() && scanBytes > 0 {
+        gp := work.assistQueue.q.pop()
+
+        // 注意，gp.gcAssistBytes 是负数，因为 goroutine 之前积累了协助债务
+        // 判断当前扫描信用是否能够满足 goroutine 的债务
+        if scanBytes+gp.gcAssistBytes >= 0 {
+            // 如果当前的信用足够偿还整个债务，更新扫描字节并清空债务
+            scanBytes += gp.gcAssistBytes
+            gp.gcAssistBytes = 0
+
+            // 注意：不要将这个 goroutine 放到 runnext 队列中，以避免它的高优先级
+            // 被滥用，阻塞其他 goroutine 执行。
+            ready(gp, 0, false)
+        } else {
+            // 如果信用不足以偿还整个债务，只偿还部分债务
+            gp.gcAssistBytes += scanBytes
+            scanBytes = 0
+
+            // 为了避免大的协助任务堵塞队列，我们将该任务移到队列的末尾，
+            // 确保小的协助任务能及时得到处理。
+            work.assistQueue.q.pushBack(gp)
+            break
+        }
+    }
+
+    // 如果仍然有剩余的扫描字节（信用不足以偿还所有的协助债务），
+    // 我们将它们转回到后台扫描信用池中
+    if scanBytes > 0 {
+        // 将剩余的扫描字节转换为相应的工作量
+        assistWorkPerByte := gcController.assistWorkPerByte.Load()
+        scanWork = int64(float64(scanBytes) * assistWorkPerByte)
+        gcController.bgScanCredit.Add(scanWork)
+    }
+
+    // 解锁，完成当前的工作信用分配
+    unlock(&work.assistQueue.lock)
+}
+```
+
+
+通过上面的分析，我们可以发现，我们的 GC 是通过广度优先搜索的方式去从堆上扫描对象来进行回收，也就是说，如果堆上的内存小，但是对象多，就会给 GC 带来很大的压力，所以这就是我们需要进行逃逸分析，在一些情况下尽量避免内存逃逸到堆上；除了这些 GC 的步骤之外，还引入了租约的制度来平衡申请内存和标记的速度。
+
+看完这部分源码我觉得《Go 语言设计与实现》讲的是真的不错，但是真的得自己再去看看源码才能把整个链路搞明白，光看书还是很糊里糊涂的。
