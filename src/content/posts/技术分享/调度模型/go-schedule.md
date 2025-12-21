@@ -67,11 +67,28 @@ func procresize(nprocs int32) *p {
 	}
 	// 缩容操作啥的，不重要
 	...
+	
+	// 这里一般会把没有运行队列（一般是刚初始化的 p）放入空闲队列
+	for i := nprocs - 1; i >= 0; i-- {
+		pp := allp[i]
+		if gp.m.p.ptr() == pp {
+			continue
+		}
+		pp.status = _Pidle
+		if runqempty(pp) {
+			pidleput(pp, now)
+		} else {
+			pp.m.set(mget())
+			pp.link.set(runnablePs)
+			runnablePs = pp
+		}
+	}
+	...
 	// 统计 allp 里面谁有待执行的 g，在 schedinit 阶段一定为空。
 	return runnablePs
 }
 ```
-随后我们可以进入到 `p.init` 这个方法：
+我们可以注意到，我们的 p 在 `init` 之后，由 `pidleput` 放入了空闲列表，而这个空闲列表正是我们程序准备完毕之后，gmp 的一个关键，随后我们可以进入到 `p.init` 这个方法：
 ```go
 // 初始化 p
 func (pp *p) init(id int32) {
@@ -127,11 +144,20 @@ func newproc(fn *funcval) {
 		// 不然就正常放入 runq，
 		// 当然，如果本地队列满了，那么就会包括这个 g 在内，取一部分 g 到全局队列
 		runqput(pp, newg, true)
-		...
+		
+		// 在程序完成所有初始化之后，
+		// 每次创建一个新的goroutine，都尝试唤醒一个可能在休眠的P。
+		// 要求是此时没有正在自旋的 m（意思是此时足够空闲）
+		// 有了它，每次启动一个协程都有可能启动一个 p，从而真正意义上的利用了多核的优势。
+		if mainStarted {
+			wakep()
+		}
 	})
 }
 ```
-虽然这里的 `newproc1` 和 `runqput` 看起来都很有意思，但是这并不是我们的重点，你只需要知道，`newproc1` 其实就是根据一系列参数创建了一个结构体，而 `runqput` 则是让这个 g 能够被 p 调度运行即可。而我们当前处于 go 程序初始化的阶段，这里传入的 fn 参数的当然是 `runtime.main`，于是，我们可以知道，我们当前 p 的本地队列有一个待执行的 g 了！接下来，我们会调用 `mstart` 最终执行到 `schedule` 我们就能够看见真正的 gmp 调度了。而 `mstart` 其实是一段汇编代码，他会调用 `mstart0`，但是其实 `mstart0` 并没有什么值得注意的代码，我们可以直接看 `mstart1`：
+虽然这里的 `newproc1` 和 `runqput` 看起来都很有意思，但是这并不是我们的重点，你只需要知道，`newproc1` 其实就是根据一系列参数创建了一个结构体，而 `runqput` 则是让这个 g 能够被 p 调度运行即可。这里虽然并不会执行，但是等到 `runtime.main` 执行过程中，`main.main` 开始之前，这个 `mainStart` 会标记为 true，之后每次启动一个 goroutine 都有可能唤醒我们之前初始化好的 p，然后让他去陷入 `schedule` 调度循环，进入到 `findRunnable` 去寻找可以执行的 g，他可能会去获取全局队列上的 g，也可能窃取其他队列上的 g，从而实现多个 p 的负载均衡。总之，有了这个，我们就能够充分的利用多核的优势，真正意义上的有多个 g-m-p 正在运行。
+
+而我们当前处于 go 程序初始化的阶段，这里传入的 fn 参数的当然是 `runtime.main`，于是，我们可以知道，我们当前 p 的本地队列有一个待执行的 g 了！接下来，我们会调用 `mstart` 最终执行到 `schedule` 我们就能够看见真正的 gmp 调度了。而 `mstart` 其实是一段汇编代码，他会调用 `mstart0`，但是其实 `mstart0` 并没有什么值得注意的代码，我们可以直接看 `mstart1`：
 ```go
 func mstart1() {
 	...
