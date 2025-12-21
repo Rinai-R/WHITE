@@ -7,7 +7,7 @@ tags:
   - Golang
   - 垃圾回收
 category: 技术分享
-draft: true
+draft: false
 ---
 ## 前言
 
