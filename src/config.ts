@@ -28,8 +28,8 @@ export const siteConfig: SiteConfig = {
 	wallpaper: {
 		mode: "banner",
 		src: {
-			desktop: ["assets/images/mono1.png"],
-			mobile: ["assets/images/mono1.png"],
+			desktop: ["assets/images/nuoya.jpg"],
+			mobile: ["assets/images/nuoya_mobile.jpg"],
 		},
 		position: "center",
 		carousel: {
