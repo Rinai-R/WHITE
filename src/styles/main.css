@@ -1,3 +1,35 @@
+/* Maple font: place Maple WOFF2 files in `public/fonts/` as
+   - public/fonts/maple-regular.woff2
+   - public/fonts/maple-italic.woff2
+   If you prefer embedding, replace the url(...) with a data: URI.
+*/
+
+@font-face {
+    font-family: 'Maple Mono';
+    src: url('/fonts/MapleMonoNormal-Medium.ttf.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Maple Mono';
+    src: url('/fonts/MapleMonoNormal-MediumItalic.ttf.woff2') format('woff2');
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Apply Maple as the primary UI and content font with sensible fallbacks */
+body, input, textarea, button, select {
+    font-family: 'Maple Mono', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+/* Optional: make headings use the same font */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Maple Mono', inherit;
+}
+
 @tailwind components;
 
 @layer components {
