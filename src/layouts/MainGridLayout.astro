@@ -95,7 +95,7 @@ const mainPanelTop = isBannerMode
 <!-- Navbar -->
 <slot slot="head" name="head"></slot>
 {isFullscreenMode && <FullscreenWallpaper config={siteConfig.wallpaper}></FullscreenWallpaper>}
-<div id="top-row" class="z-50 pointer-events-none relative transition-all duration-700 max-w-[var(--page-width)] px-0 md:px-4 mx-auto" class:list={[""]}>
+<div id="top-row" class="z-50 pointer-events-none relative transition-all duration-700 max-w-[var(--page-width)] px-0 md:pl-6 md:pr-2 mx-auto lg:ml-auto lg:mr-6" class:list={[""]}>
     <div id="navbar-wrapper" class="pointer-events-auto sticky top-0 transition-all">
         <Navbar></Navbar>
     </div>
@@ -117,9 +117,9 @@ const mainPanelTop = isBannerMode
      class:list={[{"mobile-main-no-banner": !isHomePage && isBannerMode, "no-banner-layout": !isBannerMode}]}
      style={`top: ${mainPanelTop}`}>
     <!-- The pointer-events-none here prevent blocking the click event of the TOC -->
-    <div class="relative max-w-[var(--page-width)] mx-auto pointer-events-auto">
-        <div id="main-grid" class="transition duration-700 w-full left-0 right-0 grid grid-cols-[17.5rem_auto] grid-rows-[auto_1fr_auto] lg:grid-rows-[auto]
-    mx-auto gap-4 px-0 md:px-4"
+    <div class="relative max-w-[var(--page-width)] mx-auto lg:ml-auto lg:mr-6 pointer-events-auto">
+        <div id="main-grid" class="transition duration-700 w-full left-0 right-0 grid grid-cols-1 lg:grid-cols-[16rem_minmax(0,max(0px,calc(var(--page-width)_-_16rem_-_0.75rem)))] 2xl:grid-cols-[16rem_minmax(0,max(0px,calc(var(--page-width)_-_16rem_-_12.5rem_-_1.5rem)))_12.5rem] grid-rows-[auto_1fr_auto] lg:grid-rows-[auto]
+    mx-auto gap-2 lg:gap-3 px-0 md:pl-6 md:pr-2"
         >
             <!-- Banner image credit -->
             {hasBannerCredit && <a href={siteConfig.wallpaper.banner?.credit?.url || "#"} id="banner-credit" target={hasBannerLink ? "_blank" : undefined} rel={hasBannerLink ? "noopener" : undefined} aria-label="Visit image source"
@@ -135,20 +135,34 @@ const mainPanelTop = isBannerMode
             </a>}
 
 
-            <SideBar class="mb-4 row-start-2 row-end-3 col-span-2 lg:row-start-1 lg:row-end-2 lg:col-span-1 lg:max-w-[17.5rem] onload-animation" headings={headings}></SideBar>
+            <SideBar class="mb-4 row-start-2 row-end-3 col-span-1 lg:row-start-1 lg:row-end-2 lg:col-start-1 lg:col-span-1 lg:max-w-[16rem] onload-animation" headings={headings}></SideBar>
 
-            <main id="swup-container" class="transition-swup-fade col-span-2 lg:col-span-1 overflow-hidden">
+            <main id="swup-container" class="transition-swup-fade col-span-1 lg:col-start-2 lg:col-span-1 overflow-hidden">
                 <div id="content-wrapper" class="onload-animation">
                     <!-- the overflow-hidden here prevent long text break the layout-->
                     <!-- make id different from windows.swup global property -->
                     <slot></slot>
-                    <div class="footer col-span-2 onload-animation hidden lg:block">
+                    <div class="footer col-span-1 onload-animation hidden lg:block">
                         <Footer></Footer>
                     </div>
                 </div>
             </main>
 
-            <div class="footer col-span-2 onload-animation block lg:hidden">
+            {siteConfig.toc.enable ? (
+                <div id="toc-wrapper" class:list={["hidden 2xl:block transition row-start-1 row-end-2 2xl:col-start-3 2xl:col-span-1", {"toc-hide": isBannerMode}]}>
+                    <div id="toc-inner-wrapper" class="sticky top-14 w-full h-[calc(100vh_-_20rem)] overflow-y-scroll overflow-x-hidden hide-scrollbar">
+                        <div id="toc" class="w-full h-full transition-swup-fade ">
+                            <div class="h-8 w-full"></div>
+                            <TOC headings={headings}></TOC>
+                            <div class="h-8 w-full"></div>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <div id="toc"></div>
+            )}
+
+            <div class="footer col-span-1 onload-animation block lg:hidden">
                 <Footer></Footer>
             </div>
         </div>
@@ -157,24 +171,4 @@ const mainPanelTop = isBannerMode
     </div>
 </div>
 
-<!-- The things that should be under the banner, only the TOC for now -->
-<div class="absolute w-full z-0 hidden 2xl:block">
-    <div class="relative max-w-[var(--page-width)] mx-auto">
-        <!-- TOC component -->
-        {siteConfig.toc.enable && <div id="toc-wrapper" class:list={["hidden lg:block transition absolute top-0 -right-[var(--toc-width)] w-[var(--toc-width)] items-center",
-            {"toc-hide": isBannerMode}]}
-        >
-            <div id="toc-inner-wrapper" class="fixed top-14 w-[var(--toc-width)] h-[calc(100vh_-_20rem)] overflow-y-scroll overflow-x-hidden hide-scrollbar">
-                <div id="toc" class="w-full h-full transition-swup-fade ">
-                    <div class="h-8 w-full"></div>
-                    <TOC headings={headings}></TOC>
-                    <div class="h-8 w-full"></div>
-                </div>
-            </div>
-        </div>}
-
-        <!-- #toc needs to exist for Swup to work normally -->
-        {!siteConfig.toc.enable && <div id="toc"></div>}
-    </div>
-</div>
 </Layout>

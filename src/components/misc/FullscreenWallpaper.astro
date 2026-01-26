@@ -122,11 +122,13 @@ const positionClass = getPositionClass(position);
 	function initFullscreenWallpaperCarousel() {
 		const wallpaperContainer = document.querySelector('[data-fullscreen-wallpaper]');
 		if (!wallpaperContainer) return;
+		if (wallpaperContainer.dataset.carouselInit === 'true') return;
+		wallpaperContainer.dataset.carouselInit = 'true';
 
 		const desktopItems = wallpaperContainer.querySelectorAll('.hidden.lg\\:block [data-carousel-item]');
 		const mobileItems = wallpaperContainer.querySelectorAll('.block.lg\\:hidden [data-carousel-item]');
 
-		const startCarousel = (items) => {
+		const startCarousel = (items, key) => {
 			if (!items || items.length <= 1) return;
 
 			let currentIndex = 0;
@@ -134,15 +136,17 @@ const positionClass = getPositionClass(position);
 				item.style.opacity = index === 0 ? '1' : '0';
 			});
 
-			setInterval(() => {
+			const timer = setInterval(() => {
 				items[currentIndex].style.opacity = '0';
 				currentIndex = (currentIndex + 1) % items.length;
 				items[currentIndex].style.opacity = '1';
 			}, carouselInterval * 1000);
+			wallpaperContainer.__carouselTimers = wallpaperContainer.__carouselTimers || {};
+			wallpaperContainer.__carouselTimers[key] = timer;
 		};
 
-		startCarousel(desktopItems);
-		startCarousel(mobileItems);
+		startCarousel(desktopItems, 'desktop');
+		startCarousel(mobileItems, 'mobile');
 	}
 
 	if (document.readyState === 'loading') {

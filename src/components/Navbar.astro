@@ -297,6 +297,7 @@ function initSemifullScrollDetection() {
 
   semifullScrollHandler = requestTick;
   window.addEventListener('scroll', requestTick, { passive: true });
+  window.__navbarSemifullBound = true;
   updateNavbarState();
 }
 

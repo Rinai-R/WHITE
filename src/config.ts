@@ -28,8 +28,8 @@ export const siteConfig: SiteConfig = {
 	wallpaper: {
 		mode: "banner",
 		src: {
-			desktop: ["assets/images/nuoya.jpg"],
-			mobile: ["assets/images/nuoya_mobile.jpg"],
+			desktop: ["assets/images/roxy2.jpg"],
+			mobile: ["assets/images/roxy2.jpg"],
 		},
 		position: "center",
 		carousel: {
@@ -95,7 +95,7 @@ export const navBarConfig: NavBarConfig = {
 };
 
 export const profileConfig: ProfileConfig = {
-	avatar: "assets/images/avatar1.png",
+	avatar: "assets/images/avatar3.jpg",
 	name: "Rinai",
 	bio: "只是一个计算机爱好者",
 	links: [
