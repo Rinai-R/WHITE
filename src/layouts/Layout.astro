@@ -347,6 +347,11 @@ function scheduleSwupRecovery() {
 }
 
 function setClickOutsideToClose(panel: string, ignores: string[]) {
+	const registry = (window as unknown as { __clickOutsideRegistry?: Set<string> }).__clickOutsideRegistry
+		?? ((window as unknown as { __clickOutsideRegistry: Set<string> }).__clickOutsideRegistry = new Set<string>());
+	if (registry.has(panel)) return;
+	registry.add(panel);
+
 	document.addEventListener("click", event => {
 		const panelDom = document.getElementById(panel);
 		if (!panelDom) {
@@ -377,6 +382,8 @@ function loadHue() {
 }
 
 let bodyScrollbarInitialized = false;
+let bodyScrollbarScheduled = false;
+const enableBodyScrollbar = false;
 let katexObserver: IntersectionObserver | undefined;
 const katexObserverOptions = {
 	root: null,
@@ -419,28 +426,69 @@ function ensureKatexObserver() {
 	}, katexObserverOptions);
 }
 
-function initCustomScrollbar() {
+function initBodyScrollbar() {
+	if (!enableBodyScrollbar) return;
 	const bodyElement = document.body;
-	if (!bodyElement) return;
-	if (!bodyScrollbarInitialized) {
-		OverlayScrollbars(
-			// docs say that a initialization to the body element would affect native functionality like window.scrollTo
-			// but just leave it here for now
-			{
-				target: bodyElement,
-				cancel: {
-					nativeScrollbarsOverlaid: true,    // don't initialize the overlay scrollbar if there is a native one
-				}
-			}, {
+	if (!bodyElement || bodyScrollbarInitialized) return;
+
+	OverlayScrollbars(
+		{
+			target: bodyElement,
+			cancel: {
+				// Avoid replacing native overlay scrollbars (macOS, etc.)
+				nativeScrollbarsOverlaid: true,
+			},
+		},
+		{
 			scrollbars: {
 				theme: 'scrollbar-base scrollbar-auto py-1',
 				autoHide: 'move',
 				autoHideDelay: 500,
 				autoHideSuspend: false,
 			},
-		});
-		bodyScrollbarInitialized = true;
+		}
+	);
+
+	bodyScrollbarInitialized = true;
+}
+
+function scheduleBodyScrollbarInit() {
+	if (bodyScrollbarInitialized || bodyScrollbarScheduled) return;
+	bodyScrollbarScheduled = true;
+
+	const run = () => {
+		bodyScrollbarScheduled = false;
+		initBodyScrollbar();
+	};
+
+	// Defer body-level DOM mutation until after the initial hydration window.
+	if (document.readyState === 'complete') {
+		requestAnimationFrame(run);
+		return;
 	}
+
+	window.addEventListener(
+		'load',
+		() => {
+			run();
+		},
+		{ once: true }
+	);
+
+	const requestIdle = (window as Window & {
+		requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => void;
+	}).requestIdleCallback;
+	if (requestIdle) {
+		requestIdle(run, { timeout: 1500 });
+		return;
+	}
+	setTimeout(run, 0);
+}
+
+function initCustomScrollbar() {
+	const bodyElement = document.body;
+	if (!bodyElement) return;
+	scheduleBodyScrollbarInit();
 
 	ensureKatexObserver();
 	const katexElements = document.querySelectorAll('.katex-display') as NodeListOf<HTMLElement>;
@@ -472,9 +520,31 @@ function init() {
 }
 
 /* Load settings when entering the site */
-init();
+if (document.readyState === 'loading') {
+	document.addEventListener('DOMContentLoaded', init, { once: true });
+} else {
+	init();
+}
+
+function syncNavbarForRoute(isHome: boolean) {
+	const navbar = document.getElementById('navbar');
+	if (!navbar) return;
+	navbar.setAttribute('data-is-home', String(isHome));
+	if (navbar.getAttribute('data-transparent-mode') === 'semifull') {
+		// Non-home pages should always render the blurred state immediately.
+		navbar.classList.toggle('scrolled', !isHome || window.scrollY > 8);
+	}
+}
 
 const setup = () => {
+	// In dev, swup's cached HTML can get out of sync with hot-updated JS and break islands.
+	if (import.meta.env.DEV) {
+		try {
+			window.swup?.cache?.empty?.();
+		} catch (error) {
+			console.warn('Failed to clear swup cache in dev:', error);
+		}
+	}
 	// TODO: temp solution to change the height of the banner
 /*
 	window.swup.hooks.on('animation:out:start', () => {
@@ -511,19 +581,20 @@ const setup = () => {
 		updateScrollThresholds();
 		requestScrollUpdate();
 	});
-	window.swup.hooks.on('visit:error', (visit: {to: {url: string}}) => {
-		clearAnimationFlags();
-		window.location.href = visit.to.url;
-	});
 	window.swup.hooks.on('visit:start', (visit: {to: {url: string}}) => {
+		if (import.meta.env.DEV) {
+			window.swup?.cache?.empty?.();
+		}
 		scheduleSwupRecovery();
 		// change banner height immediately when a link is clicked
 		const bodyElement = document.querySelector('body')
-		if (pathsEqual(visit.to.url, url('/'))) {
+		const isHomeTarget = pathsEqual(visit.to.url, url('/'));
+		if (isHomeTarget) {
 			bodyElement!.classList.add('lg:is-home');
 		} else {
 			bodyElement!.classList.remove('lg:is-home');
 		}
+		syncNavbarForRoute(isHomeTarget);
 		updateScrollThresholds();
 		requestScrollUpdate();
 
@@ -545,6 +616,7 @@ const setup = () => {
 		if (heightExtend) {
 			heightExtend.classList.remove('hidden')
 		}
+		syncNavbarForRoute(document.body.classList.contains('lg:is-home'));
 		refreshScrollTargets();
 		updateScrollThresholds();
 		requestScrollUpdate();

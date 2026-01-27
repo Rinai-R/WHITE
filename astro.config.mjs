@@ -40,7 +40,8 @@ export default defineConfig({
 			// when the Tailwind class `transition-all` is used
 			containers: ["main", "#toc"],
 			smoothScrolling: true,
-			cache: true,
+			// Swup cache + client:only islands can get out of sync and break hydration.
+			cache: false,
 			preload: true,
 			accessibility: true,
 			updateHead: true,
@@ -102,7 +103,7 @@ export default defineConfig({
 		}),
 		svelte(),
 		sitemap(),
-	],
+	].filter(Boolean),
 	markdown: {
 		remarkPlugins: [
 			remarkMath,

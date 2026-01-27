@@ -95,7 +95,7 @@ const mainPanelTop = isBannerMode
 <!-- Navbar -->
 <slot slot="head" name="head"></slot>
 {isFullscreenMode && <FullscreenWallpaper config={siteConfig.wallpaper}></FullscreenWallpaper>}
-<div id="top-row" class="z-50 pointer-events-none relative transition-all duration-700 max-w-[var(--page-width)] px-0 md:pl-6 md:pr-2 mx-auto lg:ml-auto lg:mr-6" class:list={[""]}>
+<div id="top-row" class="z-50 pointer-events-none relative transition-all duration-700 max-w-[var(--page-width)] px-0 md:pl-6 md:pr-2 2xl:pl-12 2xl:pr-0 mx-auto" class:list={[""]}>
     <div id="navbar-wrapper" class="pointer-events-auto sticky top-0 transition-all">
         <Navbar></Navbar>
     </div>
@@ -117,9 +117,9 @@ const mainPanelTop = isBannerMode
      class:list={[{"mobile-main-no-banner": !isHomePage && isBannerMode, "no-banner-layout": !isBannerMode}]}
      style={`top: ${mainPanelTop}`}>
     <!-- The pointer-events-none here prevent blocking the click event of the TOC -->
-    <div class="relative max-w-[var(--page-width)] mx-auto lg:ml-auto lg:mr-6 pointer-events-auto">
+    <div class="relative max-w-[var(--page-width)] mx-auto 2xl:pl-12 2xl:pr-0 pointer-events-auto">
         <div id="main-grid" class="transition duration-700 w-full left-0 right-0 grid grid-cols-1 lg:grid-cols-[16rem_minmax(0,max(0px,calc(var(--page-width)_-_16rem_-_0.75rem)))] 2xl:grid-cols-[16rem_minmax(0,max(0px,calc(var(--page-width)_-_16rem_-_12.5rem_-_1.5rem)))_12.5rem] grid-rows-[auto_1fr_auto] lg:grid-rows-[auto]
-    mx-auto gap-2 lg:gap-3 px-0 md:pl-6 md:pr-2"
+    mx-auto gap-2 lg:gap-3 px-0 md:pl-6 md:pr-2 2xl:pl-12 2xl:pr-0"
         >
             <!-- Banner image credit -->
             {hasBannerCredit && <a href={siteConfig.wallpaper.banner?.credit?.url || "#"} id="banner-credit" target={hasBannerLink ? "_blank" : undefined} rel={hasBannerLink ? "noopener" : undefined} aria-label="Visit image source"
