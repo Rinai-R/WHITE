@@ -1,9 +1,11 @@
 ---
 title: Go 的 GC 链路梳理
 published: 2025-12-04
-description: "众所周知，我们现版本的 Go 默认是使用的三色标记法，八股文已经听腻了，来看点源码理解一下 GC 流程。"
-image: "./2025-12-04.png"
-tags: [Golang, 垃圾回收]
+description: 众所周知，我们现版本的 Go 默认是使用的三色标记法，八股文已经听腻了，来看点源码理解一下 GC 流程。
+image: ./assets/2025-12-04.png
+tags:
+  - Golang
+  - 垃圾回收
 category: 技术分享
 draft: false
 ---

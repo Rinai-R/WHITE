@@ -2,7 +2,7 @@
 title: Go 的调度模型
 published: 2025-12-21
 description: G、M、P 及其牵扯到的各种应用绝对是 Go 语言最核心，最复杂的部分。
-image: ./2025-12-20.png
+image: ./assets/2025-12-20.png
 tags:
   - Golang
   - 调度器
