@@ -8,7 +8,7 @@ tags:
   - 源码解读
 category: 技术分享
 draft: false
-image:
+image: ./assets/2026-02-07.jpg
 ---
 前几天看见一个技术交流群有关于 sync.Pool 的交流，问他是如何做到无锁并发访问的，我对这个问题比较有兴趣，就去看了它的源码一探究竟。
 
