@@ -7,7 +7,7 @@ tags:
   - 并发原语
   - 源码解读
 category: 技术分享
-draft: true
+draft: false
 ---
 前几天看见一个技术交流群有关于 sync.Pool 的交流，问他是如何做到无锁并发访问的，我对这个问题比较有兴趣，就去看了它的源码一探究竟。
 
@@ -87,10 +87,54 @@ func (p *Pool) pin() (*poolLocal, int) {
 		return indexLocal(l, pid), pid
 	}
 
-	// 否则走慢路径，从其他 p 的对象池窃取或者走 Victim 机制
+	// 否则走慢路径，这里会初始化
 	return p.pinSlow()
 }
 ```
+我们可以去仔细看看 `pinSlow` 方法，其实从我们最开始的示例代码就可以知道，我们最开始没有为 `p.local` 或者 `p.localsize` 赋值的，这当然是在 sync.Pool 的考虑范围之内，当我们第一次执行 Get 的时候，内存池完全是空的，就会走慢路径为我们初始化内存池：
+```go
+func (p *Pool) pinSlow() (*poolLocal, int) {
+	// 处于 pin 状态不能去执行 lock，先 unpin
+	runtime_procUnpin()
+
+	// 所有 Pool 的全局锁：保护 allPools
+	allPoolsMu.Lock()
+	defer allPoolsMu.Unlock()
+
+	// 重新 pin，现在是安全的
+	pid := runtime_procPin()
+
+	s := p.localSize
+	l := p.local
+
+	// 看看之前 unpin 到加锁这段期间可能已经被初始化好了。
+	if uintptr(pid) < s {
+		return indexLocal(l, pid), pid
+	}
+
+	// 这里说明当前 pid 超出 localSize，说明 local 尚未初始化或 GOMAXPROCS 变大导致不够用
+
+	if p.local == nil {
+		// 第一次初始化该 Pool：把它加入 allPools，
+		allPools = append(allPools, p)
+	}
+
+	// local 数组大小按当前 GOMAXPROCS 分配，
+	// 每个 P 一个 poolLocal，减少竞争。
+	size := runtime.GOMAXPROCS(0)
+
+	// 分配新的 poolLocal 数组
+	local := make([]poolLocal, size)
+
+	atomic.StorePointer(&p.local, unsafe.Pointer(&local[0]))
+	runtime_StoreReluintptr(&p.localSize, uintptr(size)) 
+
+	// 返回当前 pid 对应池子槽位
+	return &local[pid], pid
+}
+```
+此时当然已经初始化完了，但是我们的 local 池子里面的链表还是空的，所以此时还是会走慢路径，如果慢路径也没有窃取到，则会走 `New` 去初始化新的对象。
+
 慢路径就是从其他 p 的对象池的队尾进行窃取，这里不从队头窃取的原因之一是避免和当前正在窃取的队列的 p 发生冲突，注意，这里会和其他也在窃取这个队列的 p 发生冲突，当这个 p 的对象池队头遇到队尾也会有冲突，之后我们会讲；如果没有窃取到一块对象池，就会尝试用 victim 机制加载对象池，否则直接返回 nil：
 ```go
 func (p *Pool) getSlow(pid int) any {
@@ -132,7 +176,7 @@ func (p *Pool) getSlow(pid int) any {
 	return nil
 }
 ```
-是的，这里返回了 nil，在我们上面的逻辑可以知道，在检测到获取的对象为 nil 的时候，就会通过我们传入的 `New` 方法去创建一块新的内存，之后我们将这块 `New` 出来的对象还会通过 `Put` 放回队列，那个时候也有很多有意思的处理。
+是的，这里返回了 nil，在我们上面的逻辑可以知道，在检测到获取的对象为 nil 的时候，就会通过我们传入的 `New` 方法去创建一块新的内存，之后我们将这块 `New` 出来的对象还会通过 `Put` 放回队列。
 
 这里我们先提及我们底层的这个队列的并发安全操作是如何实现的吧，首先我们这里主要是 `popTail` 和 `popHead` 这两个方法。
 ```go
@@ -195,11 +239,109 @@ func (d *poolDequeue) popHead() (any, bool) {
 ```
 可以看见，其实就是将队头和队尾的 index 值打包成一个 uint64 的数字来实现 CAS 原子操作保证操作队头和队尾是并发安全的，同时由于这里队头一般只会由一个 p 进行操作，所以这里的 slot 可以无锁安全操作的。
 
-下面来看看我们的队尾是如何操作的：
+其实我们的队尾整体上也是一样的原理，但是他在检测到队尾某个数组节点为空时，需要通过 CAS 原子切换队尾的元素，保证每次正确得到有元素的队尾节点开始窃取。这里就不再赘述了。
+
 ## Put 方法如何实现的？
-其实从我们最开始的示例代码就可以知道，我们最开始没有为 `p.local` 或者 `p.localsize` 赋值的，这当然是在 sync.Pool 的考虑范围之内，当我们第一次执行 Get 的时候，内存池完全是空的，他会通过 `New` 来创建一个新的对象，之后我们调用 `Put` 归还这个对象的时候，如果此时内存池依旧是空的，就会走慢路径为我们初始化内存池：
+
+直接上代码：
+```go
+func (p *Pool) Put(x any) {
+	...
+	
+	// 依旧绑定 g 到 p 上，并得到 p 在 pool 里面的对应的对象池链表
+	l, _ := p.pin()
+	if l.private == nil {
+		// 快速路径
+		l.private = x
+	} else {
+		// 直接走 pushHead
+		l.shared.pushHead(x)
+	}
+	runtime_procUnpin()
+	if race.Enabled {
+		race.Enable()
+	}
+}
+```
+`pin` 方法都是一样的，后面干的第一件事就是检查快速路径的 `private` 位置，否则直接走 `pushHead` 从队头推入对象，这里我们可以知道，p 对应的对象池队头在同一时刻总是只有一个 g 进行操作，所以这里是相对比较安全的，但是也要注意和队尾的窃取的竞争问题。
+
+下面来看看 `pushHead` 的实现：
+```go
+func (c *poolChain) pushHead(val any) {
+	// 取当前链表头结点
+	d := c.head
+	if d == nil {
+		// 第一次插入：初始化整个 chain（只有一个 deque 节点）
+		const initSize = 8
+		d = new(poolChainElt)
+		d.vals = make([]eface, initSize)
+		c.head = d
+		c.tail.Store(d)
+	}
+
+	// 尝试直接往当前 head 节点的头部入队
+	// pushHead 返回 true 表示成功
+	if d.pushHead(val) {
+		return
+	}
+	
+	// 扩容，需要新建一个 head
+	newSize := len(d.vals) * 2
+	if newSize >= dequeueLimit {
+		newSize = dequeueLimit
+	}
+
+	// 新建链表头节点 d2
+	d2 := &poolChainElt{}
+	d2.prev.Store(d)
+	d2.vals = make([]eface, newSize)
+
+	// 把新节点设置为 head，并把旧 head 的 next 指向新 head
+	c.head = d2
+	d.next.Store(d2) // 原子写 next，这里主要是防止和队尾产生冲突
+
+	// 新 head 肯定是空的，把元素 push 进去
+	d2.pushHead(val)
+}
+
+```
+到了这里，其实我们可以发现，我们第一次调用 `Get` 或者 `Put` 都是一个懒加载的策略，在 `pin` 的时候才会真正地去根据 GOMAXPROCS 的数量去分配对象池的空间，第一次 Put 的时候，才会真正给对象池的链表头分配空间。
+
+这里的 `pushHead` 其实相比之下是比较无趣的，他和 `popHead` 实现也是大差不差，这里不再赘述。
+
+我们可以小结一下，通过传入一个 `New` 函数来指定这个对象池里面存放的元素，之后我们第一次从中 `Get` 肯定是没办法从对象池里面拿到任何数据的，只能通过 `New` 去新分配对象，直到我们尝试往里面 `Put` 对象，他就会缓存到这个 p 的对象池里面了，并且他是可以被其他 p 从队尾窃取的。那么回到最初的问题，他是如何实现无锁访问的？首先他是通过 pid 进行分片，让每个 p 上的 g 可以在 `pin` 之后能够安全的访问本地对象池，但是这里如果是从对象池队列里面访问数据的话，是需要和队尾的窃取 goroutine 竞争的，这里通过 CAS 操作解决了这个问题。当然，我们的 `sync.Pool` 他并不是完全无锁的，我们所有的初始化的 sync.Pool 都需要加入全局的 Pool 数组，原因之后会说，如果需要访问这个全局的 Pool 数组就需要通过加一个全局锁来访问了。
+
+下面介绍一些我们之前提过的，但是没有详细说的优化机制。
 
 ## 其他一些优化机制
 
+### victim 机制
+
+我们之前在 `getSLow` 的方法里面看见过 `sync.Pool` 的一个字段叫做 `victim`，这里和我们的垃圾回收有关，在垃圾回收期间，我们会将 `sync.Pool` 里面的对象进行清理，如果不进行清理就可能会导致内存问题，但是如果直接进行清理就意味着我们每个 p 的本地缓存就没了，如果当前的 pool 是热点数据，就会直接导致程序性能下降，为了应对这个问题，就引入了 `victim` 机制。
+
+在进行垃圾回收的时候，会将当前的对象池存入 `sync.Pool` 的 `victim` 对象，而将 `local` 置为 nil，当我们之后执行 `Get` 的时候，如果发现 `local` 没有数据，会尝试走慢路径，这里包括窃取和走 `victim`，我们此时可以直接同 `victim` 里面获取对象，于是就不需要走 `New` 方法了，并且之后我们在执行 `Put` 归还这个对象的时候，也是归还到 `local` 里面，可以近似看成一个渐进式迁移的策略。
+
+如果当前的 `sync.Pool` 调用比较频繁，那么之前在里面缓存的对象可以很快地被迁移到新的 `local` 里面，如果调用比较少，那么 `victim` 成员里面的数据基本不会被迁移，在下一轮 GC 中，就会取消对它的引用，从而能够被 GC 给回收掉，这样在性能和减少内存占用上取得了平衡。
+
+### cache line 优化
+
+我们可以观察，每一个 sync.Pool 关于 p 的本地缓存的结构体如下：
+```go
+type poolLocalInternal struct {
+	private any 
+	shared  poolChain
+}
+
+type poolLocal struct {
+	poolLocalInternal
+
+	// Prevents false sharing on widespread platforms with
+	// 128 mod (cache line size) = 0 .
+	pad [128 - unsafe.Sizeof(poolLocalInternal{})%128]byte
+}
+```
+这里的 pad 成员我们并没有看见它的使用，通过注释我们可以知道，这是一个关于 cacheline 的优化策略，pad 的作用就是将 `poolLocal` 的大小补齐到 128 个字节对齐，大部分 CPU Cacheline 的大小是 64 字节，这样可以覆盖常见的甚至 CPU Cacheline 更宽的情况，从而避免了两个 p 的本地对象池落在同一个 Cacheline 的伪共享情况，至于什么是伪共享并不是本文的重点，可以参考 [小林 coding](https://www.xiaolincoding.com/os/1_hardware/how_cpu_deal_task.html) 感觉他的图是讲得比较清晰的。
 
 ## 总结
+
+总的来讲，sync.Pool 的源码是非常简短的，但是他在设计上也有很多值得我们注意和学习的点，比如如何并发无锁访问、victim 机制、如何避免伪共享问题，这些都是很有意思的知识。
