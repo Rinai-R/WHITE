@@ -341,7 +341,7 @@ type poolLocal struct {
 	pad [128 - unsafe.Sizeof(poolLocalInternal{})%128]byte
 }
 ```
-这里的 pad 成员我们并没有看见它的使用，通过注释我们可以知道，这是一个关于 cacheline 的优化策略，pad 的作用就是将 `poolLocal` 的大小补齐到 128 个字节对齐，大部分 CPU Cacheline 的大小是 64 字节，这样可以覆盖常见的甚至 CPU Cacheline 更宽的情况，从而避免了两个 p 的本地对象池落在同一个 Cacheline 的伪共享情况，至于什么是伪共享并不是本文的重点，可以参考 [小林 coding](https://www.xiaolincoding.com/os/1_hardware/how_cpu_deal_task.html) 感觉他的图是讲得比较清晰的。
+这里的 pad 成员我们并没有看见它的使用，通过注释我们可以知道，这是一个关于 cacheline 的优化策略，pad 的作用就是将 `poolLocal` 的大小补齐到 128 个字节对齐，大部分 CPU Cacheline 的大小都是 64 字节，这样就保证了每个 `poolLocal` 可以覆盖常见的甚至 CPU Cacheline 更宽的情况，从而避免了两个 p 的本地对象池落在同一个 Cacheline，进而导致伪共享的问题，至于什么是伪共享并不是本文的重点，可以参考 [小林 coding](https://www.xiaolincoding.com/os/1_hardware/how_cpu_deal_task.html)，我觉得他的图是讲得比较清晰的。
 
 ## 总结
 
