@@ -1,6 +1,6 @@
 ---
 title: sync.Pool 是怎么实现的？
-published: 2026-02-06
+published: 2026-02-07
 description: 都说 sync.Pool 是无锁并发访问的，你知道原理吗？
 tags:
   - Golang
@@ -8,6 +8,7 @@ tags:
   - 源码解读
 category: 技术分享
 draft: false
+image:
 ---
 前几天看见一个技术交流群有关于 sync.Pool 的交流，问他是如何做到无锁并发访问的，我对这个问题比较有兴趣，就去看了它的源码一探究竟。
 
