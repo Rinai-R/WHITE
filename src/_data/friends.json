@@ -40,5 +40,11 @@
 		"siteDesc": "25 级的小学弟",
 		"siteUrl": "https://starlight-fall-library.vercel.app/",
 		"siteIcon": "https://starlight-fall-library.vercel.app/_astro/avatar.B8BMLqE2_Z1MCebr.webp"
+	},
+	{
+		"siteTitle": "Claran の小窝",
+		"siteDesc": "后端学习者",
+		"siteUrl": "https://www.claran-blog.work/",
+		"siteIcon": "https://www.claran-blog.work/_astro/Amiya.vswFF26b_gGs1t.webp"
 	}
 ]
