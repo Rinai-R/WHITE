@@ -125,8 +125,7 @@ func (pp *p) init(id int32) {
 func newproc(fn *funcval) {
 	...
 	// systemstack 之前也提过，他会切换到 g0 的栈进行执行
-	// g0 的栈，本质上其实就是由操作系统管理的线程在用户态执行代码的线程栈。
-	// 它并不属于常规的 goroutine 栈，这个栈归操作系统管而不是 go 的运行时。
+	// g0 的栈，本质上其实就是一个初始栈空间更大的 goroutine，细节暂时未研究。
 	systemstack(func() {
 		// 1. 创建Goroutine结构体
 		// newproc1是真正负责分配和初始化g结构体的函数。
