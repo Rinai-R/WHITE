@@ -1,5 +1,7 @@
 <script lang="ts">
 import Icon from "@iconify/svelte";
+import I18nKey from "../../../../i18n/i18nKey";
+import { i18n } from "../../../../i18n/translation";
 import type { RepeatMode } from "../../../../types/music";
 import NextButton from "../atoms/NextButton.svelte";
 import PlayButton from "../atoms/PlayButton.svelte";
@@ -45,14 +47,14 @@ const modeActive = $derived(isShuffled || repeatMode > 0);
 		class="icon-btn"
 		class:active-mode={modeActive}
 		onclick={onToggleMode}
-		aria-label="播放模式"
+		aria-label={i18n(I18nKey.musicBoxMode)}
 	>
 		<Icon icon={repeatIcon} class="text-xl" />
 	</button>
 	<PrevButton onclick={onPrev} />
 	<PlayButton {isPlaying} {isLoading} onclick={onTogglePlay} />
 	<NextButton onclick={onNext} />
-	<button class="icon-btn list-btn" onclick={onTogglePlaylist} aria-label="播放列表">
+	<button class="icon-btn list-btn" onclick={onTogglePlaylist} aria-label={i18n(I18nKey.musicBoxPlaylist)}>
 		<Icon icon="material-symbols:queue-music-rounded" class="text-xl" />
 	</button>
 </div>

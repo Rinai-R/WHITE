@@ -1,5 +1,7 @@
 <script lang="ts">
 import Icon from "@iconify/svelte";
+import I18nKey from "../../../../i18n/i18nKey";
+import { i18n } from "../../../../i18n/translation";
 import type { Song } from "../../../types/music";
 
 interface Props {
@@ -76,7 +78,7 @@ function handleVolumeKey(event: KeyboardEvent) {
 				type="button"
 				class="vol-btn"
 				onclick={onToggleMute}
-				aria-label="切换静音"
+				aria-label={isMuted ? i18n(I18nKey.musicBoxUnmute) : i18n(I18nKey.musicBoxMute)}
 			>
 				<Icon
 					icon={isMuted || volume === 0
@@ -94,7 +96,7 @@ function handleVolumeKey(event: KeyboardEvent) {
 				onkeydown={handleVolumeKey}
 				role="slider"
 				tabindex="0"
-				aria-label="音量"
+				aria-label={i18n(I18nKey.musicBoxVolume)}
 				aria-valuemin="0"
 				aria-valuemax="100"
 				aria-valuenow={volumePercent}

@@ -37,6 +37,21 @@ enum I18nKey {
 	friends = "friends",
 
 	musicPlayer = "musicPlayer",
+	musicBox = "musicBox",
+	musicBoxPlay = "musicBoxPlay",
+	musicBoxPause = "musicBoxPause",
+	musicBoxPrev = "musicBoxPrev",
+	musicBoxNext = "musicBoxNext",
+	musicBoxPlaylist = "musicBoxPlaylist",
+	musicBoxMode = "musicBoxMode",
+	musicBoxVolume = "musicBoxVolume",
+	musicBoxMute = "musicBoxMute",
+	musicBoxUnmute = "musicBoxUnmute",
+	musicBoxShuffle = "musicBoxShuffle",
+	musicBoxRepeat = "musicBoxRepeat",
+	musicBoxRepeatOne = "musicBoxRepeatOne",
+	musicBoxProgress = "musicBoxProgress",
+	musicBoxCover = "musicBoxCover",
 }
 
 export default I18nKey;

@@ -1,4 +1,8 @@
 <script lang="ts">
+import I18nKey from "../../../../i18n/i18nKey";
+import { i18n } from "../../../../i18n/translation";
+import { getAssetPath } from "../../../../utils/asset-path";
+
 interface Props {
 	cover: string;
 	isPlaying: boolean;
@@ -6,19 +10,12 @@ interface Props {
 }
 
 const { cover, isPlaying, isLoading }: Props = $props();
-
-function getAssetPath(path: string): string {
-	if (!path) return "/favicon/favicon.png";
-	if (path.startsWith("http://") || path.startsWith("https://")) return path;
-	if (path.startsWith("/")) return path;
-	return `/${path}`;
-}
 </script>
 
 <div class="cover-container">
 	<img
-		src={getAssetPath(cover)}
-		alt="封面"
+		src={getAssetPath(cover, "/favicon/favicon.png")}
+		alt={i18n(I18nKey.musicPlayer)}
 		loading="eager"
 		class="cover-img"
 		class:spinning={isPlaying && !isLoading}

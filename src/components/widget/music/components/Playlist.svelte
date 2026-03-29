@@ -1,5 +1,7 @@
 <script lang="ts">
 import Icon from "@iconify/svelte";
+import I18nKey from "../../../../i18n/i18nKey";
+import { i18n } from "../../../../i18n/translation";
 import type { Song } from "../../../../types/music";
 import { getAssetPath } from "../../../../utils/asset-path";
 
@@ -19,7 +21,7 @@ const { playlist, currentIndex, isPlaying, show, onClose, onPlaySong }: Props =
 <div class="playlist-drawer" class:open={show}>
 	<div class="playlist-inner">
 		<div class="playlist-shell">
-			<div class="playlist-list" role="listbox" aria-label="播放列表">
+			<div class="playlist-list" role="listbox" aria-label={i18n(I18nKey.musicBoxPlaylist)}>
 				{#each playlist as song, index}
 					<div
 						class="track-item"
@@ -34,7 +36,7 @@ const { playlist, currentIndex, isPlaying, show, onClose, onPlaySong }: Props =
 						role="option"
 						tabindex="0"
 						aria-selected={index === currentIndex}
-						aria-label={`播放 ${song.title}`}
+						aria-label={`${i18n(I18nKey.musicBoxPlay)} ${song.title}`}
 					>
 						<div class="track-cover">
 							<img src={getAssetPath(song.cover, "/favicon/favicon.png")} alt={song.title} loading="lazy" />
