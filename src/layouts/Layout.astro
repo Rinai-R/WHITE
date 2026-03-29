@@ -723,12 +723,6 @@ updateScrollUI();
 window.addEventListener('scroll', requestScrollUpdate, { passive: true });
 window.addEventListener('resize', requestResizeUpdate, { passive: true });
 
-if (window?.swup?.hooks) {
-	setup()
-} else {
-	document.addEventListener('swup:enable', setup)
-}
-
 </script>
 
 <script>
@@ -796,9 +790,15 @@ const setup = () => {
 	)
 }
 
-if (window.swup) {
-	setup()
-} else {
-	document.addEventListener("swup:enable", setup)
+// Initialize Swup hooks when ready
+// In production, swup may initialize after this script loads
+const initSwupHooks = () => {
+	if (!window.swup?.hooks) return false;
+	setup();
+	return true;
+};
+
+if (!initSwupHooks()) {
+	document.addEventListener('swup:enable', initSwupHooks, { once: true });
 }
 </script>
