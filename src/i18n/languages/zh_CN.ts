@@ -37,4 +37,5 @@ export const zh_CN: Translation = {
 	[Key.author]: "作者",
 	[Key.publishedAt]: "发布于",
 	[Key.license]: "许可协议",
+	[Key.musicPlayer]: "音乐播放器",
 };

@@ -175,3 +175,7 @@ export type BlogPostData = {
 export type ExpressiveCodeConfig = {
 	theme: string;
 };
+
+export type MusicPlayerConfig = {
+	enable: boolean;
+};

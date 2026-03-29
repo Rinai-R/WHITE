@@ -1,0 +1,18 @@
+[
+	{
+		"id": 1,
+		"title": "Memories of Kindness",
+		"artist": "鹿乃",
+		"cover": "/assets/music/cover/Memories of Kindness.jpg",
+		"url": "/assets/music/mp3/Memories of Kindness.mp3",
+		"duration": 0
+	},
+	{
+		"id": 2,
+		"title": "星座になれたら",
+		"artist": "結束バンド",
+		"cover": "/assets/music/cover/若能化为星座.jpg",
+		"url": "/assets/music/mp3/若能化为星座.mp3",
+		"duration": 0
+	}
+]
