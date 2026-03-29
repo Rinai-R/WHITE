@@ -1,18 +1,19 @@
 <script lang="ts">
-	import Icon from "@iconify/svelte";
-	import type { Song } from "../../../../types/music";
-	import { getAssetPath } from "../../../../utils/asset-path";
+import Icon from "@iconify/svelte";
+import type { Song } from "../../../../types/music";
+import { getAssetPath } from "../../../../utils/asset-path";
 
-	interface Props {
-		playlist: Song[];
-		currentIndex: number;
-		isPlaying: boolean;
-		show: boolean;
-		onClose: () => void;
-		onPlaySong: (index: number) => void;
-	}
+interface Props {
+	playlist: Song[];
+	currentIndex: number;
+	isPlaying: boolean;
+	show: boolean;
+	onClose: () => void;
+	onPlaySong: (index: number) => void;
+}
 
-	const { playlist, currentIndex, isPlaying, show, onClose, onPlaySong }: Props = $props();
+const { playlist, currentIndex, isPlaying, show, onClose, onPlaySong }: Props =
+	$props();
 </script>
 
 <div class="playlist-drawer" class:open={show}>

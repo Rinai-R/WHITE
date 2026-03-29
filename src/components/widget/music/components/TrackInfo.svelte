@@ -1,67 +1,69 @@
 <script lang="ts">
-	import Icon from "@iconify/svelte";
-	import type { Song } from "../../../types/music";
+import Icon from "@iconify/svelte";
+import type { Song } from "../../../types/music";
 
-	interface Props {
-		currentSong: Song;
-		currentTime: number;
-		duration: number;
-		volume: number;
-		isMuted: boolean;
-		onToggleMute: () => void;
-		onSetVolume: (v: number) => void;
+interface Props {
+	currentSong: Song;
+	currentTime: number;
+	duration: number;
+	volume: number;
+	isMuted: boolean;
+	onToggleMute: () => void;
+	onSetVolume: (v: number) => void;
+}
+
+const {
+	currentSong,
+	currentTime,
+	duration,
+	volume,
+	isMuted,
+	onToggleMute,
+	onSetVolume,
+}: Props = $props();
+
+const timeLabel = $derived(
+	`${Math.floor(currentTime / 60)}:${String(Math.floor(currentTime % 60)).padStart(2, "0")}`,
+);
+const durLabel = $derived(
+	`${Math.floor(duration / 60)}:${String(Math.floor(duration % 60)).padStart(2, "0")}`,
+);
+const volumePercent = $derived(
+	isMuted ? 0 : Math.max(0, Math.min(100, volume * 100)),
+);
+
+let isDragging = false;
+
+function handleVolumePointer(event: PointerEvent) {
+	const el = event.currentTarget as HTMLElement;
+	if (!el) return;
+	isDragging = true;
+	const rect = el.getBoundingClientRect();
+	const pct = (event.clientX - rect.left) / rect.width;
+	onSetVolume(Math.max(0, Math.min(1, pct)));
+	el.setPointerCapture(event.pointerId);
+}
+
+function handleVolumeMove(event: PointerEvent) {
+	if (!isDragging) return;
+	handleVolumePointer(event);
+}
+
+function handleVolumeEnd() {
+	isDragging = false;
+}
+
+function handleVolumeKey(event: KeyboardEvent) {
+	if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
+		event.preventDefault();
+		onSetVolume(Math.max(0, volume - 0.05));
+	} else if (event.key === "ArrowRight" || event.key === "ArrowUp") {
+		event.preventDefault();
+		onSetVolume(Math.min(1, volume + 0.05));
+	} else if (event.key === "Enter") {
+		onToggleMute();
 	}
-
-	const {
-		currentSong,
-		currentTime,
-		duration,
-		volume,
-		isMuted,
-		onToggleMute,
-		onSetVolume,
-	}: Props = $props();
-
-	const timeLabel = $derived(
-		`${Math.floor(currentTime / 60)}:${String(Math.floor(currentTime % 60)).padStart(2, "0")}`
-	);
-	const durLabel = $derived(
-		`${Math.floor(duration / 60)}:${String(Math.floor(duration % 60)).padStart(2, "0")}`
-	);
-	const volumePercent = $derived(isMuted ? 0 : Math.max(0, Math.min(100, volume * 100)));
-
-	let isDragging = false;
-
-	function handleVolumePointer(event: PointerEvent) {
-		const el = event.currentTarget as HTMLElement;
-		if (!el) return;
-		isDragging = true;
-		const rect = el.getBoundingClientRect();
-		const pct = (event.clientX - rect.left) / rect.width;
-		onSetVolume(Math.max(0, Math.min(1, pct)));
-		el.setPointerCapture(event.pointerId);
-	}
-
-	function handleVolumeMove(event: PointerEvent) {
-		if (!isDragging) return;
-		handleVolumePointer(event);
-	}
-
-	function handleVolumeEnd() {
-		isDragging = false;
-	}
-
-	function handleVolumeKey(event: KeyboardEvent) {
-		if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
-			event.preventDefault();
-			onSetVolume(Math.max(0, volume - 0.05));
-		} else if (event.key === "ArrowRight" || event.key === "ArrowUp") {
-			event.preventDefault();
-			onSetVolume(Math.min(1, volume + 0.05));
-		} else if (event.key === "Enter") {
-			onToggleMute();
-		}
-	}
+}
 </script>
 
 <div class="flex flex-col min-w-0 flex-1 overflow-hidden">

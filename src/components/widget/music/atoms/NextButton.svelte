@@ -1,12 +1,12 @@
 <script lang="ts">
-	import Icon from "@iconify/svelte";
+import Icon from "@iconify/svelte";
 
-	interface Props {
-		onclick: () => void;
-		disabled?: boolean;
-	}
+interface Props {
+	onclick: () => void;
+	disabled?: boolean;
+}
 
-	const { onclick, disabled = false }: Props = $props();
+const { onclick, disabled = false }: Props = $props();
 </script>
 
 <button class="btn-plain w-9 h-9 rounded-lg" aria-label="下一首" {onclick} {disabled}>

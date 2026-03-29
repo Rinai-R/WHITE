@@ -1,23 +1,26 @@
 <script lang="ts">
-	interface Props {
-		currentTime: number;
-		duration: number;
-		onSeek: (time: number) => void;
-	}
+interface Props {
+	currentTime: number;
+	duration: number;
+	onSeek: (time: number) => void;
+}
 
-	const { currentTime, duration, onSeek }: Props = $props();
+const { currentTime, duration, onSeek }: Props = $props();
 
-	const progressPct = $derived(
-		duration > 0 ? Math.max(0, Math.min(100, (currentTime / duration) * 100)) : 0
+const progressPct = $derived(
+	duration > 0 ? Math.max(0, Math.min(100, (currentTime / duration) * 100)) : 0,
+);
+
+function handleClick(event: MouseEvent) {
+	const el = event.currentTarget as HTMLElement;
+	if (!el || duration <= 0) return;
+	const rect = el.getBoundingClientRect();
+	const pct = Math.max(
+		0,
+		Math.min(1, (event.clientX - rect.left) / rect.width),
 	);
-
-	function handleClick(event: MouseEvent) {
-		const el = event.currentTarget as HTMLElement;
-		if (!el || duration <= 0) return;
-		const rect = el.getBoundingClientRect();
-		const pct = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
-		onSeek(pct * duration);
-	}
+	onSeek(pct * duration);
+}
 </script>
 
 <div class="progress-wrap">

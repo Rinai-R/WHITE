@@ -1,30 +1,30 @@
 <script lang="ts">
-	import { onDestroy, onMount } from "svelte";
-	import type { MusicPlayerState } from "../../../stores/musicPlayerStore";
-	import { musicPlayerStore } from "../../../stores/musicPlayerStore";
-	import CoverImage from "./atoms/CoverImage.svelte";
-	import Controls from "./components/Controls.svelte";
-	import Playlist from "./components/Playlist.svelte";
-	import Progress from "./components/Progress.svelte";
-	import TrackInfo from "./components/TrackInfo.svelte";
+import { onDestroy, onMount } from "svelte";
+import type { MusicPlayerState } from "../../../stores/musicPlayerStore";
+import { musicPlayerStore } from "../../../stores/musicPlayerStore";
+import CoverImage from "./atoms/CoverImage.svelte";
+import Controls from "./components/Controls.svelte";
+import Playlist from "./components/Playlist.svelte";
+import Progress from "./components/Progress.svelte";
+import TrackInfo from "./components/TrackInfo.svelte";
 
-	let state: MusicPlayerState = $state(musicPlayerStore.getState());
+let state: MusicPlayerState = $state(musicPlayerStore.getState());
 
-	function handleStateUpdate(event: Event) {
-		const custom = event as CustomEvent<MusicPlayerState>;
-		if (custom.detail) state = custom.detail;
+function handleStateUpdate(event: Event) {
+	const custom = event as CustomEvent<MusicPlayerState>;
+	if (custom.detail) state = custom.detail;
+}
+
+onMount(async () => {
+	window.addEventListener("music-player:state", handleStateUpdate);
+	await musicPlayerStore.initialize();
+});
+
+onDestroy(() => {
+	if (typeof window !== "undefined") {
+		window.removeEventListener("music-player:state", handleStateUpdate);
 	}
-
-	onMount(async () => {
-		window.addEventListener("music-player:state", handleStateUpdate);
-		await musicPlayerStore.initialize();
-	});
-
-	onDestroy(() => {
-		if (typeof window !== "undefined") {
-			window.removeEventListener("music-player:state", handleStateUpdate);
-		}
-	});
+});
 </script>
 
 <div class="music-widget">

@@ -1,6 +1,6 @@
-import type { RepeatMode, Song } from "../types/music";
-import { musicPlayerConfig } from "../config";
 import musicPlaylist from "../_data/music.json";
+import { musicPlayerConfig } from "../config";
+import type { RepeatMode, Song } from "../types/music";
 import { getAssetPath } from "../utils/asset-path";
 
 export const STORAGE_KEY_VOLUME = "music-player-volume";
@@ -83,7 +83,12 @@ class MusicPlayerStore {
 	}
 
 	async initialize(): Promise<void> {
-		if (typeof window === "undefined" || this.isInitialized || this.isInitializing) return;
+		if (
+			typeof window === "undefined" ||
+			this.isInitialized ||
+			this.isInitializing
+		)
+			return;
 		this.isInitializing = true;
 		try {
 			if (!musicPlayerConfig.enable) return;
@@ -130,7 +135,10 @@ class MusicPlayerStore {
 		});
 		this.audio.addEventListener("error", (event) => {
 			const mediaError = (event.target as HTMLAudioElement)?.error;
-			console.error("[MusicPlayer] Audio load failed:", mediaError?.message ?? "unknown error");
+			console.error(
+				"[MusicPlayer] Audio load failed:",
+				mediaError?.message ?? "unknown error",
+			);
 			this.state.isLoading = false;
 			this.state.errorMessage = "加载失败，跳过下一首";
 			this.state.showError = true;
@@ -170,8 +178,8 @@ class MusicPlayerStore {
 		if (typeof localStorage === "undefined") return;
 		const saved = localStorage.getItem(STORAGE_KEY_VOLUME);
 		if (saved) {
-			const v = parseFloat(saved);
-			if (!isNaN(v) && v >= 0 && v <= 1) {
+			const v = Number.parseFloat(saved);
+			if (!Number.isNaN(v) && v >= 0 && v <= 1) {
 				this.state.volume = v;
 				this.state.isMuted = v === 0;
 				if (this.audio) {
@@ -185,9 +193,12 @@ class MusicPlayerStore {
 	private registerInteractionHandler(): void {
 		const handler = () => {
 			if (this.state.autoplayFailed && this.audio) {
-				this.audio.play().then(() => {
-					this.state.autoplayFailed = false;
-				}).catch(() => {});
+				this.audio
+					.play()
+					.then(() => {
+						this.state.autoplayFailed = false;
+					})
+					.catch(() => {});
 			}
 		};
 		document.addEventListener("click", handler, { once: true });
@@ -237,10 +248,15 @@ class MusicPlayerStore {
 		if (this.state.isShuffled) {
 			do {
 				newIndex = Math.floor(Math.random() * this.state.playlist.length);
-			} while (newIndex === this.state.currentIndex && this.state.playlist.length > 1);
+			} while (
+				newIndex === this.state.currentIndex &&
+				this.state.playlist.length > 1
+			);
 		} else {
-			newIndex = this.state.currentIndex < this.state.playlist.length - 1
-				? this.state.currentIndex + 1 : 0;
+			newIndex =
+				this.state.currentIndex < this.state.playlist.length - 1
+					? this.state.currentIndex + 1
+					: 0;
 		}
 		this.state.currentIndex = newIndex;
 		this.loadSong(this.state.playlist[newIndex], autoPlay);
@@ -248,8 +264,10 @@ class MusicPlayerStore {
 
 	prev(): void {
 		if (this.state.playlist.length <= 1) return;
-		const newIndex = this.state.currentIndex > 0
-			? this.state.currentIndex - 1 : this.state.playlist.length - 1;
+		const newIndex =
+			this.state.currentIndex > 0
+				? this.state.currentIndex - 1
+				: this.state.playlist.length - 1;
 		this.state.currentIndex = newIndex;
 		this.loadSong(this.state.playlist[newIndex], true);
 	}
@@ -325,7 +343,9 @@ class MusicPlayerStore {
 			listener(snapshot);
 		}
 		if (typeof window !== "undefined") {
-			window.dispatchEvent(new CustomEvent("music-player:state", { detail: snapshot }));
+			window.dispatchEvent(
+				new CustomEvent("music-player:state", { detail: snapshot }),
+			);
 		}
 	}
 

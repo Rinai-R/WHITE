@@ -1,43 +1,43 @@
 <script lang="ts">
-	import Icon from "@iconify/svelte";
-	import type { RepeatMode } from "../../../../types/music";
-	import NextButton from "../atoms/NextButton.svelte";
-	import PlayButton from "../atoms/PlayButton.svelte";
-	import PrevButton from "../atoms/PrevButton.svelte";
+import Icon from "@iconify/svelte";
+import type { RepeatMode } from "../../../../types/music";
+import NextButton from "../atoms/NextButton.svelte";
+import PlayButton from "../atoms/PlayButton.svelte";
+import PrevButton from "../atoms/PrevButton.svelte";
 
-	interface Props {
-		isPlaying: boolean;
-		isLoading: boolean;
-		isShuffled: boolean;
-		repeatMode: RepeatMode;
-		onToggleMode: () => void;
-		onPrev: () => void;
-		onNext: () => void;
-		onTogglePlay: () => void;
-		onTogglePlaylist: () => void;
-	}
+interface Props {
+	isPlaying: boolean;
+	isLoading: boolean;
+	isShuffled: boolean;
+	repeatMode: RepeatMode;
+	onToggleMode: () => void;
+	onPrev: () => void;
+	onNext: () => void;
+	onTogglePlay: () => void;
+	onTogglePlaylist: () => void;
+}
 
-	const {
-		isPlaying,
-		isLoading,
-		isShuffled,
-		repeatMode,
-		onToggleMode,
-		onPrev,
-		onNext,
-		onTogglePlay,
-		onTogglePlaylist,
-	}: Props = $props();
+const {
+	isPlaying,
+	isLoading,
+	isShuffled,
+	repeatMode,
+	onToggleMode,
+	onPrev,
+	onNext,
+	onTogglePlay,
+	onTogglePlaylist,
+}: Props = $props();
 
-	const repeatIcon = $derived(
-		isShuffled
-			? "material-symbols:shuffle-rounded"
-			: repeatMode === 1
-				? "material-symbols:repeat-one-rounded"
-				: "material-symbols:repeat-rounded"
-	);
+const repeatIcon = $derived(
+	isShuffled
+		? "material-symbols:shuffle-rounded"
+		: repeatMode === 1
+			? "material-symbols:repeat-one-rounded"
+			: "material-symbols:repeat-rounded",
+);
 
-	const modeActive = $derived(isShuffled || repeatMode > 0);
+const modeActive = $derived(isShuffled || repeatMode > 0);
 </script>
 
 <div class="controls-row">

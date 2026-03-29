@@ -1,18 +1,18 @@
 <script lang="ts">
-	interface Props {
-		cover: string;
-		isPlaying: boolean;
-		isLoading: boolean;
-	}
+interface Props {
+	cover: string;
+	isPlaying: boolean;
+	isLoading: boolean;
+}
 
-	const { cover, isPlaying, isLoading }: Props = $props();
+const { cover, isPlaying, isLoading }: Props = $props();
 
-	function getAssetPath(path: string): string {
-		if (!path) return "/favicon/favicon.png";
-		if (path.startsWith("http://") || path.startsWith("https://")) return path;
-		if (path.startsWith("/")) return path;
-		return `/${path}`;
-	}
+function getAssetPath(path: string): string {
+	if (!path) return "/favicon/favicon.png";
+	if (path.startsWith("http://") || path.startsWith("https://")) return path;
+	if (path.startsWith("/")) return path;
+	return `/${path}`;
+}
 </script>
 
 <div class="cover-container">
