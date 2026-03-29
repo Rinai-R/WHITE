@@ -20,4 +20,4 @@ export const BANNER_WAVE_HEIGHT = 2.8;
 export const MAIN_PANEL_OVERLAPS_BANNER_HEIGHT = 3;
 
 // Page width: rem
-export const PAGE_WIDTH = 90;
+export const PAGE_WIDTH = 98;

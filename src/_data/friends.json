@@ -8,7 +8,7 @@
 	{
 		"siteTitle": "_042的小破站♪",
 		"siteDesc": "Welcome to _042のTiny Home! ♪♪♪|",
-		"siteUrl": "https://skdg042.github.io/",
+		"siteUrl": "https://blog.zerofot.com/",
 		"siteIcon": "https://avatars.githubusercontent.com/u/184650144?v=4"
 	},
 	{
@@ -34,5 +34,17 @@
 		"siteDesc": "我喜欢你",
 		"siteUrl": "https://maomengblog.vercel.app/",
 		"siteIcon": "https://maomengblog.vercel.app/_astro/avatar.DCxqmrMX_ZDbOQJ.webp"
+	},
+	{
+		"siteTitle": "魂星 | 坠星书阁",
+		"siteDesc": "25 级的小学弟",
+		"siteUrl": "https://starlight-fall-library.vercel.app/",
+		"siteIcon": "https://starlight-fall-library.vercel.app/_astro/avatar.B8BMLqE2_Z1MCebr.webp"
+	},
+	{
+		"siteTitle": "Claran の小窝",
+		"siteDesc": "后端学习者",
+		"siteUrl": "https://www.claran-blog.work/",
+		"siteIcon": "https://www.claran-blog.work/_astro/Amiya.vswFF26b_gGs1t.webp"
 	}
 ]

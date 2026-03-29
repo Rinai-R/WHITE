@@ -192,6 +192,8 @@ const creditUrl = credit?.url;
 	function initCarousel() {
 		const carousel = document.getElementById('banner-carousel');
 		if (!carousel) return;
+		if (carousel.dataset.carouselInit === 'true') return;
+		carousel.dataset.carouselInit = 'true';
 
 	const rawConfig = carousel.getAttribute('data-carousel-config');
 	const config = rawConfig ? JSON.parse(rawConfig) : {};
@@ -221,6 +223,7 @@ const creditUrl = credit?.url;
 
 	const interval = (config.interval ?? 6) * 1000;
 	let timer = window.setInterval(next, interval);
+	carousel.__carouselTimer = timer;
 	let paused = false;
 	let currentIndex = 0;
 
@@ -248,6 +251,7 @@ const creditUrl = credit?.url;
 		if (!paused) return;
 		paused = false;
 		timer = window.setInterval(next, interval);
+		carousel.__carouselTimer = timer;
 	}
 
 		carousel.addEventListener('mouseenter', pause);
@@ -305,4 +309,3 @@ const creditUrl = credit?.url;
 		initBanner();
 	}
 </script>
-

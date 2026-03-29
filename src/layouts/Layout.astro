@@ -180,6 +180,8 @@ const bannerOffset =
 		<script is:inline>
 		// Fallback: ensure navbar "scrolled" state toggles reliably
 		(function(){
+		  var useFallbackScroll = !window.__navbarSemifullBound;
+		  var ticking = false;
 		  function syncNavbarScrolled(){
 		    var navbar = document.getElementById('navbar');
 		    if (!navbar) return;
@@ -198,7 +200,17 @@ const bannerOffset =
 		  } else {
 		    syncNavbarScrolled();
 		  }
-		  window.addEventListener('scroll', syncNavbarScrolled, { passive: true });
+		  if (useFallbackScroll) {
+		    var onScroll = function() {
+		      if (ticking) return;
+		      ticking = true;
+		      requestAnimationFrame(function() {
+		        ticking = false;
+		        syncNavbarScrolled();
+		      });
+		    };
+		    window.addEventListener('scroll', onScroll, { passive: true });
+		  }
 		  if (window?.swup?.hooks) {
 		    window.swup.hooks.on('page:view', function(){ requestAnimationFrame(syncNavbarScrolled); });
 		  }
@@ -335,6 +347,11 @@ function scheduleSwupRecovery() {
 }
 
 function setClickOutsideToClose(panel: string, ignores: string[]) {
+	const registry = (window as unknown as { __clickOutsideRegistry?: Set<string> }).__clickOutsideRegistry
+		?? ((window as unknown as { __clickOutsideRegistry: Set<string> }).__clickOutsideRegistry = new Set<string>());
+	if (registry.has(panel)) return;
+	registry.add(panel);
+
 	document.addEventListener("click", event => {
 		const panelDom = document.getElementById(panel);
 		if (!panelDom) {
@@ -364,68 +381,121 @@ function loadHue() {
 	setHue(getHue())
 }
 
-function initCustomScrollbar() {
-	const bodyElement = document.querySelector('body');
-	if (!bodyElement) return;
-	OverlayScrollbars(
-		// docs say that a initialization to the body element would affect native functionality like window.scrollTo
-		// but just leave it here for now
-		{
-			target: bodyElement,
-			cancel: {
-				nativeScrollbarsOverlaid: true,    // don't initialize the overlay scrollbar if there is a native one
-			}
-		}, {
+let bodyScrollbarInitialized = false;
+let bodyScrollbarScheduled = false;
+const enableBodyScrollbar = false;
+let katexObserver: IntersectionObserver | undefined;
+const katexObserverOptions = {
+	root: null,
+	rootMargin: '100px',
+	threshold: 0.1
+};
+
+const processKatexElement = (element: HTMLElement) => {
+	if (!element.parentNode) return;
+	if (element.hasAttribute('data-scrollbar-initialized')) return;
+
+	const container = document.createElement('div');
+	container.className = 'katex-display-container';
+	container.setAttribute('aria-label', 'scrollable container for formulas');
+
+	element.parentNode.insertBefore(container, element);
+	container.appendChild(element);
+
+	OverlayScrollbars(container, {
 		scrollbars: {
-			theme: 'scrollbar-base scrollbar-auto py-1',
-			autoHide: 'move',
+			theme: 'scrollbar-base scrollbar-auto',
+			autoHide: 'leave',
 			autoHideDelay: 500,
-			autoHideSuspend: false,
-		},
+			autoHideSuspend: false
+		}
 	});
 
-	const katexElements = document.querySelectorAll('.katex-display') as NodeListOf<HTMLElement>;
+	element.setAttribute('data-scrollbar-initialized', 'true');
+};
 
-	const katexObserverOptions = {
-		root: null,
-		rootMargin: '100px',
-		threshold: 0.1
-	};
-
-	const processKatexElement = (element: HTMLElement) => {
-		if (!element.parentNode) return;
-		if (element.hasAttribute('data-scrollbar-initialized')) return;
-
-		const container = document.createElement('div');
-		container.className = 'katex-display-container';
-		container.setAttribute('aria-label', 'scrollable container for formulas');
-
-		element.parentNode.insertBefore(container, element);
-		container.appendChild(element);
-
-		OverlayScrollbars(container, {
-			scrollbars: {
-				theme: 'scrollbar-base scrollbar-auto',
-				autoHide: 'leave',
-				autoHideDelay: 500,
-				autoHideSuspend: false
-			}
-		});
-
-		element.setAttribute('data-scrollbar-initialized', 'true');
-	};
-
-	const katexObserver = new IntersectionObserver((entries, observer) => {
+function ensureKatexObserver() {
+	if (katexObserver) return;
+	katexObserver = new IntersectionObserver((entries, observer) => {
 		entries.forEach(entry => {
 			if (entry.isIntersecting) {
-			processKatexElement(entry.target as HTMLElement);
-			observer.unobserve(entry.target);
+				processKatexElement(entry.target as HTMLElement);
+				observer.unobserve(entry.target);
 			}
 		});
 	}, katexObserverOptions);
+}
 
+function initBodyScrollbar() {
+	if (!enableBodyScrollbar) return;
+	const bodyElement = document.body;
+	if (!bodyElement || bodyScrollbarInitialized) return;
+
+	OverlayScrollbars(
+		{
+			target: bodyElement,
+			cancel: {
+				// Avoid replacing native overlay scrollbars (macOS, etc.)
+				nativeScrollbarsOverlaid: true,
+			},
+		},
+		{
+			scrollbars: {
+				theme: 'scrollbar-base scrollbar-auto py-1',
+				autoHide: 'move',
+				autoHideDelay: 500,
+				autoHideSuspend: false,
+			},
+		}
+	);
+
+	bodyScrollbarInitialized = true;
+}
+
+function scheduleBodyScrollbarInit() {
+	if (bodyScrollbarInitialized || bodyScrollbarScheduled) return;
+	bodyScrollbarScheduled = true;
+
+	const run = () => {
+		bodyScrollbarScheduled = false;
+		initBodyScrollbar();
+	};
+
+	// Defer body-level DOM mutation until after the initial hydration window.
+	if (document.readyState === 'complete') {
+		requestAnimationFrame(run);
+		return;
+	}
+
+	window.addEventListener(
+		'load',
+		() => {
+			run();
+		},
+		{ once: true }
+	);
+
+	const requestIdle = (window as Window & {
+		requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => void;
+	}).requestIdleCallback;
+	if (requestIdle) {
+		requestIdle(run, { timeout: 1500 });
+		return;
+	}
+	setTimeout(run, 0);
+}
+
+function initCustomScrollbar() {
+	const bodyElement = document.body;
+	if (!bodyElement) return;
+	scheduleBodyScrollbarInit();
+
+	ensureKatexObserver();
+	const katexElements = document.querySelectorAll('.katex-display') as NodeListOf<HTMLElement>;
 	katexElements.forEach(element => {
-		katexObserver.observe(element);
+		if (!element.hasAttribute('data-scrollbar-initialized')) {
+			katexObserver?.observe(element);
+		}
 	});
 }
 
@@ -450,9 +520,31 @@ function init() {
 }
 
 /* Load settings when entering the site */
-init();
+if (document.readyState === 'loading') {
+	document.addEventListener('DOMContentLoaded', init, { once: true });
+} else {
+	init();
+}
+
+function syncNavbarForRoute(isHome: boolean) {
+	const navbar = document.getElementById('navbar');
+	if (!navbar) return;
+	navbar.setAttribute('data-is-home', String(isHome));
+	if (navbar.getAttribute('data-transparent-mode') === 'semifull') {
+		// Non-home pages should always render the blurred state immediately.
+		navbar.classList.toggle('scrolled', !isHome || window.scrollY > 8);
+	}
+}
 
 const setup = () => {
+	// In dev, swup's cached HTML can get out of sync with hot-updated JS and break islands.
+	if (import.meta.env.DEV) {
+		try {
+			window.swup?.cache?.empty?.();
+		} catch (error) {
+			console.warn('Failed to clear swup cache in dev:', error);
+		}
+	}
 	// TODO: temp solution to change the height of the banner
 /*
 	window.swup.hooks.on('animation:out:start', () => {
@@ -485,20 +577,26 @@ const setup = () => {
 	window.swup.hooks.on('content:replace', () => {
 		initCustomScrollbar();
 		scheduleSwupRecovery();
-	});
-	window.swup.hooks.on('visit:error', (visit: {to: {url: string}}) => {
-		clearAnimationFlags();
-		window.location.href = visit.to.url;
+		refreshScrollTargets();
+		updateScrollThresholds();
+		requestScrollUpdate();
 	});
 	window.swup.hooks.on('visit:start', (visit: {to: {url: string}}) => {
+		if (import.meta.env.DEV) {
+			window.swup?.cache?.empty?.();
+		}
 		scheduleSwupRecovery();
 		// change banner height immediately when a link is clicked
 		const bodyElement = document.querySelector('body')
-		if (pathsEqual(visit.to.url, url('/'))) {
+		const isHomeTarget = pathsEqual(visit.to.url, url('/'));
+		if (isHomeTarget) {
 			bodyElement!.classList.add('lg:is-home');
 		} else {
 			bodyElement!.classList.remove('lg:is-home');
 		}
+		syncNavbarForRoute(isHomeTarget);
+		updateScrollThresholds();
+		requestScrollUpdate();
 
 		// increase the page height during page transition to prevent the scrolling animation from jumping
 		const heightExtend = document.getElementById('page-height-extend')
@@ -518,6 +616,10 @@ const setup = () => {
 		if (heightExtend) {
 			heightExtend.classList.remove('hidden')
 		}
+		syncNavbarForRoute(document.body.classList.contains('lg:is-home'));
+		refreshScrollTargets();
+		updateScrollThresholds();
+		requestScrollUpdate();
 	});
 	window.swup.hooks.on('visit:end', (_visit: {to: {url: string}}) => {
 		setTimeout(() => {
@@ -534,59 +636,97 @@ const setup = () => {
             }
         }, 200)
 	});
-}
-if (window?.swup?.hooks) {
-	setup()
-} else {
-	document.addEventListener('swup:enable', setup)
-}
+};
 
 let backToTopBtn = document.getElementById('back-to-top-btn');
 let toc = document.getElementById('toc-wrapper');
-let navbar = document.getElementById('navbar-wrapper')
-function scrollFunction() {
-	let bannerHeight = window.innerHeight * (BANNER_HEIGHT / 100)
+let navbar = document.getElementById('navbar-wrapper');
 
-	if (backToTopBtn) {
-		if (document.body.scrollTop > bannerHeight || document.documentElement.scrollTop > bannerHeight) {
-			backToTopBtn.classList.remove('hide')
-		} else {
-			backToTopBtn.classList.add('hide')
-		}
-	}
+let scrollTicking = false;
+let resizeTicking = false;
+let lastScrollTop = -1;
+let bannerHeightPx = 0;
+let navbarHideThreshold = 0;
 
-	if (bannerEnabled && toc) {
-		if (document.body.scrollTop > bannerHeight || document.documentElement.scrollTop > bannerHeight) {
-			toc.classList.remove('toc-hide')
-		} else {
-			toc.classList.add('toc-hide')
-		}
-	}
-
-	if (!bannerEnabled) return
-	if (navbar) {
-		const NAVBAR_HEIGHT = 72
-		const MAIN_PANEL_EXCESS_HEIGHT = MAIN_PANEL_OVERLAPS_BANNER_HEIGHT * 16			// The height the main panel overlaps the banner
-
-		let bannerHeight = BANNER_HEIGHT
-		if (document.body.classList.contains('lg:is-home') && window.innerWidth >= 1024) {
-			bannerHeight = BANNER_HEIGHT_HOME
-		}
-		let threshold = window.innerHeight * (bannerHeight / 100) - NAVBAR_HEIGHT - MAIN_PANEL_EXCESS_HEIGHT - 16
-		if (document.body.scrollTop >= threshold || document.documentElement.scrollTop >= threshold) {
-			navbar.classList.add('navbar-hidden')
-		} else {
-			navbar.classList.remove('navbar-hidden')
-		}
-	}
+function refreshScrollTargets() {
+	backToTopBtn = document.getElementById('back-to-top-btn');
+	toc = document.getElementById('toc-wrapper');
+	navbar = document.getElementById('navbar-wrapper');
 }
-window.onscroll = scrollFunction
 
-window.onresize = () => {
+function updateBannerHeightExtend() {
 	// calculate the --banner-height-extend, which needs to be a multiple of 4 to avoid blurry text
 	let offset = Math.floor(window.innerHeight * (BANNER_HEIGHT_EXTEND / 100));
 	offset = offset - offset % 4;
 	document.documentElement.style.setProperty('--banner-height-extend', `${offset}px`);
+}
+
+function updateScrollThresholds() {
+	const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+	bannerHeightPx = viewportHeight * (BANNER_HEIGHT / 100);
+
+	if (!bannerEnabled) {
+		navbarHideThreshold = -1;
+		return;
+	}
+
+	const NAVBAR_HEIGHT = 72;
+	const MAIN_PANEL_EXCESS_HEIGHT = MAIN_PANEL_OVERLAPS_BANNER_HEIGHT * 16; // The height the main panel overlaps the banner
+
+	let bannerHeight = BANNER_HEIGHT;
+	if (document.body.classList.contains('lg:is-home') && window.innerWidth >= 1024) {
+		bannerHeight = BANNER_HEIGHT_HOME;
+	}
+	navbarHideThreshold = viewportHeight * (bannerHeight / 100) - NAVBAR_HEIGHT - MAIN_PANEL_EXCESS_HEIGHT - 16;
+}
+
+function updateScrollUI() {
+	scrollTicking = false;
+	const scrollTop = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+	if (scrollTop === lastScrollTop) return;
+	lastScrollTop = scrollTop;
+
+	if (backToTopBtn) {
+		backToTopBtn.classList.toggle('hide', scrollTop <= bannerHeightPx);
+	}
+
+	if (bannerEnabled && toc) {
+		toc.classList.toggle('toc-hide', scrollTop <= bannerHeightPx);
+	}
+
+	if (bannerEnabled && navbar && navbarHideThreshold >= 0) {
+		navbar.classList.toggle('navbar-hidden', scrollTop >= navbarHideThreshold);
+	}
+}
+
+function requestScrollUpdate() {
+	if (scrollTicking) return;
+	scrollTicking = true;
+	requestAnimationFrame(updateScrollUI);
+}
+
+function requestResizeUpdate() {
+	if (resizeTicking) return;
+	resizeTicking = true;
+	requestAnimationFrame(() => {
+		resizeTicking = false;
+		updateBannerHeightExtend();
+		updateScrollThresholds();
+		updateScrollUI();
+	});
+}
+
+refreshScrollTargets();
+updateScrollThresholds();
+updateScrollUI();
+
+window.addEventListener('scroll', requestScrollUpdate, { passive: true });
+window.addEventListener('resize', requestResizeUpdate, { passive: true });
+
+if (window?.swup?.hooks) {
+	setup()
+} else {
+	document.addEventListener('swup:enable', setup)
 }
 
 </script>
@@ -629,18 +769,28 @@ function createPhotoSwipe() {
 	lightbox.init()
 }
 
-const setup = () => {
+function destroyPhotoSwipe() {
+	if (!lightbox) return;
+	lightbox.destroy?.();
+	lightbox = undefined as unknown as PhotoSwipeLightbox;
+}
+
+function ensurePhotoSwipe() {
 	if (!lightbox) {
-		createPhotoSwipe()
+		createPhotoSwipe();
 	}
+}
+
+const setup = () => {
+	ensurePhotoSwipe();
 	window.swup.hooks.on("page:view", () => {
-		createPhotoSwipe()
+		ensurePhotoSwipe();
 	})
 
 	window.swup.hooks.on(
 		"content:replace",
 		() => {
-			lightbox?.destroy?.()
+			destroyPhotoSwipe();
 		},
 		{ before: true },
 	)
