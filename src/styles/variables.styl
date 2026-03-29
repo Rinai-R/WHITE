@@ -9,7 +9,7 @@ rainbow-light = linear-gradient(to right, oklch(0.80 0.10 0), oklch(0.80 0.10 30
 rainbow-dark = linear-gradient(to right, oklch(0.70 0.10 0), oklch(0.70 0.10 30), oklch(0.70 0.10 60), oklch(0.70 0.10 90), oklch(0.70 0.10 120), oklch(0.70 0.10 150), oklch(0.70 0.10 180), oklch(0.70 0.10 210), oklch(0.70 0.10 240), oklch(0.70 0.10 270), oklch(0.70 0.10 300), oklch(0.70 0.10 330), oklch(0.70 0.10 360))
 
 :root
-  --radius-large 1rem
+  --radius-large 0.6rem
   --content-delay 150ms
 
 /* An util to define variables that vary with light and dark mode */
@@ -44,6 +44,9 @@ define({
   --enter-btn-bg-active: var(--btn-regular-bg-active)
 
   --deep-text: oklch(0.25 0.02 var(--hue))
+
+  --content-main: oklch(0.25 0.02 var(--hue)) oklch(0.88 0.01 var(--hue))  // Primary text: music widget titles, note card body
+  --content-meta: oklch(0.50 0.04 var(--hue)) oklch(0.62 0.04 var(--hue)) // Secondary text: artist name, timestamp, metadata
 
   --title-active: oklch(0.6 0.1 var(--hue))
 

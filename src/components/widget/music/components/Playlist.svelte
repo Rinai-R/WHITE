@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Icon from "@iconify/svelte";
-	import type { Song } from "../../../types/music";
+	import type { Song } from "../../../../types/music";
+	import { getAssetPath } from "../../../../utils/asset-path";
 
 	interface Props {
 		playlist: Song[];
@@ -12,13 +13,6 @@
 	}
 
 	const { playlist, currentIndex, isPlaying, show, onClose, onPlaySong }: Props = $props();
-
-	function getAssetPath(path: string): string {
-		if (!path) return "/favicon/favicon.png";
-		if (path.startsWith("http://") || path.startsWith("https://")) return path;
-		if (path.startsWith("/")) return path;
-		return `/${path}`;
-	}
 </script>
 
 <div class="playlist-drawer" class:open={show}>
@@ -42,7 +36,7 @@
 						aria-label={`播放 ${song.title}`}
 					>
 						<div class="track-cover">
-							<img src={getAssetPath(song.cover)} alt={song.title} loading="lazy" />
+							<img src={getAssetPath(song.cover, "/favicon/favicon.png")} alt={song.title} loading="lazy" />
 						</div>
 						<div class="track-info">
 							<div class="track-title" class:active={index === currentIndex}>{song.title}</div>

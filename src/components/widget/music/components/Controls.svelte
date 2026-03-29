@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from "@iconify/svelte";
+	import type { RepeatMode } from "../../../../types/music";
 	import NextButton from "../atoms/NextButton.svelte";
 	import PlayButton from "../atoms/PlayButton.svelte";
 	import PrevButton from "../atoms/PrevButton.svelte";
@@ -8,7 +9,7 @@
 		isPlaying: boolean;
 		isLoading: boolean;
 		isShuffled: boolean;
-		repeatMode: number;
+		repeatMode: RepeatMode;
 		onToggleMode: () => void;
 		onPrev: () => void;
 		onNext: () => void;

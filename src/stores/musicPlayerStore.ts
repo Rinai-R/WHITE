@@ -1,6 +1,7 @@
 import type { RepeatMode, Song } from "../types/music";
 import { musicPlayerConfig } from "../config";
 import musicPlaylist from "../_data/music.json";
+import { getAssetPath } from "../utils/asset-path";
 
 export const STORAGE_KEY_VOLUME = "music-player-volume";
 export const SKIP_ERROR_DELAY = 1000;
@@ -32,17 +33,11 @@ export interface MusicPlayerState {
 	autoplayFailed: boolean;
 }
 
-function getAssetPath(path: string): string {
-	if (!path) return "";
-	if (path.startsWith("http://") || path.startsWith("https://")) return path;
-	if (path.startsWith("/")) return path;
-	return `/${path}`;
-}
-
 class MusicPlayerStore {
 	private audio: HTMLAudioElement | null = null;
 	private state: MusicPlayerState;
 	private isInitialized = false;
+	private isInitializing = false;
 	private listeners = new Set<(state: MusicPlayerState) => void>();
 
 	constructor() {
@@ -88,15 +83,20 @@ class MusicPlayerStore {
 	}
 
 	async initialize(): Promise<void> {
-		if (typeof window === "undefined" || this.isInitialized) return;
-		this.isInitialized = true;
-		if (!musicPlayerConfig.enable) return;
+		if (typeof window === "undefined" || this.isInitialized || this.isInitializing) return;
+		this.isInitializing = true;
+		try {
+			if (!musicPlayerConfig.enable) return;
+			this.isInitialized = true;
 
-		this.audio = new Audio();
-		this.setupAudioListeners();
-		this.loadVolumeFromStorage();
-		this.registerInteractionHandler();
-		this.loadLocalPlaylist();
+			this.audio = new Audio();
+			this.setupAudioListeners();
+			this.loadVolumeFromStorage();
+			this.registerInteractionHandler();
+			this.loadLocalPlaylist();
+		} finally {
+			this.isInitializing = false;
+		}
 	}
 
 	private setupAudioListeners(): void {
@@ -128,7 +128,9 @@ class MusicPlayerStore {
 				this.next(true);
 			}
 		});
-		this.audio.addEventListener("error", () => {
+		this.audio.addEventListener("error", (event) => {
+			const mediaError = (event.target as HTMLAudioElement)?.error;
+			console.error("[MusicPlayer] Audio load failed:", mediaError?.message ?? "unknown error");
 			this.state.isLoading = false;
 			this.state.errorMessage = "加载失败，跳过下一首";
 			this.state.showError = true;
@@ -333,7 +335,9 @@ class MusicPlayerStore {
 			this.audio.src = "";
 			this.audio = null;
 		}
+		this.listeners.clear();
 		this.isInitialized = false;
+		this.isInitializing = false;
 	}
 }
 

@@ -100,4 +100,8 @@
 		font-size: 0.75rem;
 		text-align: center;
 	}
+
+	:global(.dark) .error-toast {
+		color: var(--content-main);
+	}
 </style>

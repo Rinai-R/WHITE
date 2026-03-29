@@ -27,6 +27,11 @@ const notesCollection = defineCollection({
 		draft: z.boolean().optional().default(false),
 		lang: z.string().optional().default(""),
 		pinned: z.boolean().optional().default(false),
+		// 日记扩展字段
+		images: z.array(z.string()).optional().default([]),
+		tags: z.array(z.string()).optional().default([]),
+		mood: z.string().optional().default(""),
+		location: z.string().optional().default(""),
 		prevTitle: z.string().default(""),
 		prevSlug: z.string().default(""),
 		nextTitle: z.string().default(""),

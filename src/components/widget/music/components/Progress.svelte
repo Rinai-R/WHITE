@@ -25,8 +25,12 @@
 		class="progress-bar"
 		onclick={handleClick}
 		onkeydown={(e) => {
-			if ((e.key === "Enter" || e.key === " ") && duration > 0) {
-				onSeek(duration * 0.5);
+			if (e.key === "ArrowLeft") {
+				e.preventDefault();
+				onSeek(Math.max(0, currentTime - 5));
+			} else if (e.key === "ArrowRight") {
+				e.preventDefault();
+				onSeek(Math.min(duration, currentTime + 5));
 			}
 		}}
 		role="slider"
