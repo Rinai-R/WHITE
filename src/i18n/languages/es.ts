@@ -37,6 +37,7 @@ export const es: Translation = {
 	[Key.author]: "Autor",
 	[Key.publishedAt]: "Publicado el",
 	[Key.license]: "Licencia",
+	[Key.musicBox]: "Music Box",
 	[Key.musicPlayer]: "Music Box",
 	[Key.musicBoxPlay]: "Reproducir",
 	[Key.musicBoxPause]: "Pausar",

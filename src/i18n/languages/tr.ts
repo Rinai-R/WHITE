@@ -37,6 +37,7 @@ export const tr: Translation = {
 	[Key.author]: "Yazar",
 	[Key.publishedAt]: "Yayınlanma:",
 	[Key.license]: "Lisans",
+	[Key.musicBox]: "Music Box",
 	[Key.musicPlayer]: "Music Box",
 	[Key.musicBoxPlay]: "Oynat",
 	[Key.musicBoxPause]: "Duraklat",

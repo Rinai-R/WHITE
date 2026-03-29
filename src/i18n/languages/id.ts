@@ -37,6 +37,7 @@ export const id: Translation = {
 	[Key.author]: "Penulis",
 	[Key.publishedAt]: "Diterbitkan pada",
 	[Key.license]: "Lisensi",
+	[Key.musicBox]: "Music Box",
 	[Key.musicPlayer]: "Music Box",
 	[Key.musicBoxPlay]: "Putar",
 	[Key.musicBoxPause]: "Jeda",

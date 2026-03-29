@@ -37,6 +37,7 @@ export const th: Translation = {
 	[Key.author]: "ผู้เขียน",
 	[Key.publishedAt]: "เผยแพร่เมื่อ",
 	[Key.license]: "สัญญาอนุญาต",
+	[Key.musicBox]: "Music Box",
 	[Key.musicPlayer]: "Music Box",
 	[Key.musicBoxPlay]: "เล่น",
 	[Key.musicBoxPause]: "หยุดชั่วคราว",

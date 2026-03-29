@@ -37,6 +37,7 @@ export const vi: Translation = {
 	[Key.author]: "Tác giả",
 	[Key.publishedAt]: "Đăng vào lúc",
 	[Key.license]: "Giấy phép bản quyền",
+	[Key.musicBox]: "Music Box",
 	[Key.musicPlayer]: "Music Box",
 	[Key.musicBoxPlay]: "Phát",
 	[Key.musicBoxPause]: "Tạm dừng",
