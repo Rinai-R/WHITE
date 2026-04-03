@@ -1,13 +1,13 @@
 ---
-import path from "node:path";
 import { Image } from "astro:assets";
+import path from "node:path";
 import { url } from "../../utils/url-utils";
 
 interface Props {
 	src: string;
 	alt?: string;
 	class?: string;
-    basePath?: string;
+	basePath?: string;
 }
 
 const { src, alt = "", basePath = "/" } = Astro.props;
@@ -21,32 +21,32 @@ const isLocal = !(
 );
 const isPublic = src.startsWith("/");
 
-let asset: any;
+let asset: string | { src: string } | Record<string, unknown> | undefined;
 if (isLocal) {
 	const files = import.meta.glob("../../**", {
 		import: "default",
 	});
 	// Avoid string escaping issues by using a simpler path normalizer for Astro components
 	let normalizedPath = path.join("../../", basePath, src);
-	while(normalizedPath.indexOf("\\") !== -1) {
+	while (normalizedPath.indexOf("\\") !== -1) {
 		normalizedPath = normalizedPath.replace("\\", "/");
 	}
 	normalizedPath = path.normalize(normalizedPath);
-	while(normalizedPath.indexOf("\\") !== -1) {
+	while (normalizedPath.indexOf("\\") !== -1) {
 		normalizedPath = normalizedPath.replace("\\", "/");
 	}
-	
+
 	const file = files[normalizedPath];
 	if (file) {
-		asset = await file();
+		asset = (await file()) as string | Record<string, unknown>;
 	} else {
-        console.warn(`[NoteImageWrapper] File not found: ${normalizedPath}`);
-    }
+		console.warn(`[NoteImageWrapper] File not found: ${normalizedPath}`);
+	}
 }
 ---
 
 {isLocal && asset ? (
-    <Image src={asset} alt={alt} class={className} />
+    <Image src={asset as any} alt={alt} class={className} />
 ) : (
     <img src={isPublic ? url(src) : src} alt={alt} class={className} loading="lazy" decoding="async" />
 )}

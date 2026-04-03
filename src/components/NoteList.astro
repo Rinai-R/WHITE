@@ -1,14 +1,14 @@
 ---
 import type { CollectionEntry } from "astro:content";
+import path from "node:path";
 import Markdown from "@components/misc/Markdown.astro";
+import NoteImageWrapper from "@components/misc/NoteImageWrapper.astro";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import { formatDateToYYYYMMDD } from "@utils/date-utils";
+import { getDir } from "@utils/url-utils";
 import { Icon } from "astro-icon/components";
 import { siteConfig } from "@/config";
-import NoteImageWrapper from "@components/misc/NoteImageWrapper.astro";
-import path from "node:path";
-import { getDir } from "@utils/url-utils";
 
 const { page } = Astro.props;
 const interval = 40;
@@ -107,13 +107,13 @@ const notes = await Promise.all(
                     {/* 顶部：置顶 + 更新时间 + Mood + Location */}
                     <header class="note-card__header flex items-center gap-2 mb-3 flex-wrap">
                         {item.entry.data.pinned && (
-                            <span class="note-pin-badge inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] text-xs text-[var(--primary)] font-bold tracking-wider uppercase">
+                            <span class="note-pin-badge inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] dark:bg-[color-mix(in_srgb,var(--primary)_20%,transparent)] text-xs text-[var(--primary)] dark:text-[color-mix(in_srgb,var(--primary)_90%,white_10%)] font-bold tracking-wider uppercase">
                                 <Icon name="material-symbols:push-pin" class="text-[0.85rem]" />
                                 {i18n(I18nKey.pinned)}
                             </span>
                         )}
                         {mood && (
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] text-xs text-[var(--primary)] font-medium">
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] dark:bg-[color-mix(in_srgb,var(--primary)_20%,transparent)] text-xs text-[var(--primary)] dark:text-[color-mix(in_srgb,var(--primary)_90%,white_10%)] font-medium">
                                 {mood}
                             </span>
                         )}

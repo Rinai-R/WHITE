@@ -63,7 +63,7 @@ const jsonLd = {
                     {displayTitle}
                 </div>
                 {entry.data.pinned && (
-                    <span class="note-pin-badge onload-animation inline-flex w-fit items-center gap-1.5 px-3 py-1.5 rounded-full bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] text-xs md:text-sm text-[var(--primary)] font-bold tracking-wider uppercase">
+                    <span class="note-pin-badge onload-animation inline-flex w-fit items-center gap-1.5 px-3 py-1.5 rounded-full bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] dark:bg-[color-mix(in_srgb,var(--primary)_20%,transparent)] text-xs md:text-sm text-[var(--primary)] dark:text-[color-mix(in_srgb,var(--primary)_90%,white_10%)] font-bold tracking-wider uppercase">
                         <Icon name="material-symbols:push-pin" class="text-sm md:text-base" />
                         <span>{i18n(I18nKey.pinned)}</span>
                     </span>
