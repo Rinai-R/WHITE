@@ -5,6 +5,9 @@ import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import { formatDateToYYYYMMDD } from "@utils/date-utils";
 import { Icon } from "astro-icon/components";
+import NoteImageWrapper from "@components/misc/NoteImageWrapper.astro";
+import path from "node:path";
+import { getDir } from "@utils/url-utils";
 
 interface Props {
 	class?: string;
@@ -16,6 +19,11 @@ const { entry, style = "" } = Astro.props;
 const className = Astro.props.class;
 
 const noteTitle = entry.data.title?.trim() || i18n(I18nKey.untitled);
+
+const images: string[] = entry.data.images ?? [];
+const tags: string[] = entry.data.tags ?? [];
+const mood: string = entry.data.mood ?? "";
+const location: string = entry.data.location ?? "";
 
 const { Content } = await entry.render();
 ---
@@ -35,9 +43,20 @@ const { Content } = await entry.render();
                 </span>
                 <span class="note-card__heading">{noteTitle}</span>
                 {entry.data.pinned && (
-                    <span class="note-pin-badge">
-                        <Icon name="material-symbols:push-pin" class="note-pin-badge__icon" />
+                    <span class="note-pin-badge inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] text-xs text-[var(--primary)] font-bold tracking-wider uppercase">
+                        <Icon name="material-symbols:push-pin" class="text-[0.85rem]" />
                         <span>{i18n(I18nKey.pinned)}</span>
+                    </span>
+                )}
+                {mood && (
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] text-sm text-[var(--primary)] font-medium">
+                        {mood}
+                    </span>
+                )}
+                {location && (
+                    <span class="inline-flex items-center gap-1 text-sm text-black/50 dark:text-white/50">
+                        <Icon name="material-symbols:location-on-outline" class="text-[1rem]" />
+                        {location}
                     </span>
                 )}
             </div>
@@ -62,6 +81,40 @@ const { Content } = await entry.render();
                     <Markdown class="text-sm md:text-base">
                         <Content />
                     </Markdown>
+
+                    {/* 图片网格 */}
+                    {images.length > 0 && (
+                        <div class:list={[
+                            "note-images mt-4",
+                            images.length === 1 && "note-images--single",
+                            images.length === 2 && "note-images--double",
+                            images.length === 3 && "note-images--triple",
+                            images.length >= 4 && "note-images--grid",
+                        ]}>
+                            {images.map((src, imgIndex) => (
+                                <a href={src.startsWith('http') ? src : undefined} data-fancybox={`note-card-${entry.slug}-${imgIndex}`} class="note-img-wrap block w-full h-full">
+                                    <NoteImageWrapper 
+                                        src={src} 
+                                        basePath={path.join("content/notes/", getDir(entry.id))}
+                                        class="note-img w-full h-full object-cover transition-transform duration-300 hover:scale-105" 
+                                    />
+                                </a>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* 标签网格 */}
+                    {tags.length > 0 && (
+                        <div class="note-tags-container mt-4">
+                            <div class="flex flex-wrap gap-2">
+                                {tags.map((tag: string) => (
+                                    <span class="btn-regular h-7 text-sm px-3 rounded-lg flex items-center justify-center font-medium">
+                                        #{tag}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -192,21 +245,35 @@ const { Content } = await entry.render();
 }
 
 .note-pin-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    background: color-mix(in srgb, var(--primary) 15%, transparent);
-    color: var(--primary);
-    font-size: 0.625rem;
-    font-weight: 600;
-    padding: 0.15rem 0.5rem;
-    border-radius: 9999px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 35%, transparent);
+    /* Styles are handled by Tailwind classes in the component */
 }
+
 
 .note-pin-badge__icon {
     font-size: 0.85rem;
 }
+
+/* 图片网格 */
+.note-images { display: grid; gap: 0.5rem; }
+.note-images--single { grid-template-columns: 1fr; max-width: 400px; }
+.note-images--double { grid-template-columns: repeat(2, 1fr); max-width: 500px; }
+.note-images--triple { grid-template-columns: repeat(2, 1fr); max-width: 500px; }
+.note-images--triple .note-img-wrap:first-child { grid-row: span 2; }
+.note-images--grid   { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); max-width: 600px; }
+@media (min-width: 768px) {
+    .note-images--single { max-width: 500px; }
+    .note-images--double { max-width: 560px; }
+    .note-images--grid   { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); max-width: 700px; }
+}
+@media (max-width: 480px) {
+    .note-images--triple .note-img-wrap:first-child { grid-row: span 1; }
+}
+.note-img-wrap {
+    display: block;
+    aspect-ratio: 1;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--foreground, currentColor) 4%, transparent);
+}
+.note-img { width: 100%; height: 100%; object-fit: cover; }
 </style>

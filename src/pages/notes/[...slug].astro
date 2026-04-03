@@ -63,8 +63,8 @@ const jsonLd = {
                     {displayTitle}
                 </div>
                 {entry.data.pinned && (
-                    <span class="note-pin-badge onload-animation">
-                        <Icon name="material-symbols:push-pin" class="text-xs md:text-sm" />
+                    <span class="note-pin-badge onload-animation inline-flex w-fit items-center gap-1.5 px-3 py-1.5 rounded-full bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] text-xs md:text-sm text-[var(--primary)] font-bold tracking-wider uppercase">
+                        <Icon name="material-symbols:push-pin" class="text-sm md:text-base" />
                         <span>{i18n(I18nKey.pinned)}</span>
                     </span>
                 )}
@@ -121,17 +121,6 @@ const jsonLd = {
 
 <style>
 .note-pin-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    background: color-mix(in srgb, var(--primary) 15%, transparent);
-    color: var(--primary);
-    font-size: 0.625rem;
-    font-weight: 600;
-    padding: 0.15rem 0.5rem;
-    border-radius: 9999px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    width: fit-content;
+    /* Styles are handled by Tailwind classes in the component */
 }
 </style>

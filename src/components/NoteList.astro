@@ -6,6 +6,9 @@ import { i18n } from "@i18n/translation";
 import { formatDateToYYYYMMDD } from "@utils/date-utils";
 import { Icon } from "astro-icon/components";
 import { siteConfig } from "@/config";
+import NoteImageWrapper from "@components/misc/NoteImageWrapper.astro";
+import path from "node:path";
+import { getDir } from "@utils/url-utils";
 
 const { page } = Astro.props;
 const interval = 40;
@@ -98,26 +101,35 @@ const notes = await Promise.all(
 
                 {/* ── 右：卡片 ── */}
                 <article class:list={[
-                    "note-timeline__card card-base",
+                    "note-timeline__card card-base group",
                     item.entry.data.pinned && "note-timeline__card--pinned",
                 ]}>
-                    {/* 顶部：置顶 + 更新时间 */}
-                    {(item.entry.data.pinned || item.updatedLabel) && (
-                        <header class="note-card__meta">
-                            {item.entry.data.pinned && (
-                                <span class="note-pin-badge">
-                                    <Icon name="material-symbols:push-pin" class="text-[0.75rem]" />
-                                    {i18n(I18nKey.pinned)}
-                                </span>
-                            )}
-                            {item.updatedLabel && updatedDateTime && (
-                                <time datetime={updatedDateTime} class="note-updated">
-                                    <Icon name="material-symbols:history" class="text-[0.75rem]" />
-                                    {item.updatedLabel}
-                                </time>
-                            )}
-                        </header>
-                    )}
+                    {/* 顶部：置顶 + 更新时间 + Mood + Location */}
+                    <header class="note-card__header flex items-center gap-2 mb-3 flex-wrap">
+                        {item.entry.data.pinned && (
+                            <span class="note-pin-badge inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] text-xs text-[var(--primary)] font-bold tracking-wider uppercase">
+                                <Icon name="material-symbols:push-pin" class="text-[0.85rem]" />
+                                {i18n(I18nKey.pinned)}
+                            </span>
+                        )}
+                        {mood && (
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] text-xs text-[var(--primary)] font-medium">
+                                {mood}
+                            </span>
+                        )}
+                        {location && (
+                            <span class="inline-flex items-center gap-1 text-xs text-black/50 dark:text-white/50">
+                                <Icon name="material-symbols:location-on-outline" class="text-[0.8rem]" />
+                                {location}
+                            </span>
+                        )}
+                        {item.updatedLabel && updatedDateTime && (
+                            <time datetime={updatedDateTime} class="note-updated ml-auto">
+                                <Icon name="material-symbols:history" class="text-[0.75rem]" />
+                                {item.updatedLabel}
+                            </time>
+                        )}
+                    </header>
 
                     {/* 正文 */}
                     <div class="note-card__body" data-pagefind-body>
@@ -126,51 +138,54 @@ const notes = await Promise.all(
                         </Markdown>
                     </div>
 
-                    {/* 图片网格 */}
+                    {/* 图片网格 (Mizuki-style) */}
                     {images.length > 0 && (
                         <div class:list={[
-                            "note-images",
+                            "note-images mt-3",
                             images.length === 1 && "note-images--single",
                             images.length === 2 && "note-images--double",
                             images.length === 3 && "note-images--triple",
                             images.length >= 4 && "note-images--grid",
                         ]}>
-                            {images.map((src) => (
-                                <a href={src} data-fancybox={`note-${index}`} class="note-img-wrap">
-                                    <img src={src} alt="" loading="lazy" decoding="async" class="note-img" />
+                            {images.map((src, imgIndex) => (
+                                <a href={src.startsWith('http') ? src : undefined} data-fancybox={`note-${index}-${imgIndex}`} class="note-img-wrap block w-full h-full">
+                                    <NoteImageWrapper 
+                                        src={src} 
+                                        basePath={path.join("content/notes/", getDir(item.entry.id))}
+                                        class="note-img w-full h-full object-cover transition-transform duration-300 hover:scale-105" 
+                                    />
                                 </a>
                             ))}
                         </div>
                     )}
 
-                    {/* footer：时间 / 标签 / 地点 / mood */}
-                    <footer class="note-card__footer">
-                        <div class="note-footer__left">
-                            <Icon name="material-symbols:schedule-outline" class="text-[0.75rem]" />
+                    {/* 标签网格 (Mizuki-style pill badges) */}
+                    {tags.length > 0 && (
+                        <div class="note-tags-container mt-3">
+                            <div class="flex flex-wrap gap-1.5">
+                                {tags.map((tag: string) => (
+                                    <span class="btn-regular h-6 text-xs px-2.5 rounded-lg flex items-center justify-center font-medium">
+                                        #{tag}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    <hr class="border-t border-black/5 dark:border-white/5 my-3" />
+
+                    {/* footer：时间 */}
+                    <footer class="note-card__footer flex items-center justify-between text-xs text-black/50 dark:text-white/50 flex-wrap gap-2">
+                        <div class="flex items-center gap-1.5">
+                            <Icon name="material-symbols:schedule-outline" class="text-[0.8rem]" />
                             <time datetime={item.entry.data.published.toISOString()}>
                                 {item.publishedLabel}
                             </time>
                         </div>
-                        <div class="note-footer__right">
-                            {tags.length > 0 && (
-                                <div class="note-tags">
-                                    {tags.map((tag: string) => (
-                                        <span class="note-tag">#{tag}</span>
-                                    ))}
-                                </div>
-                            )}
-                            {location && (
-                                <span class="note-footer__meta">
-                                    <Icon name="material-symbols:location-on-outline" class="text-[0.75rem]" />
-                                    {location}
-                                </span>
-                            )}
-                            {mood && <span class="note-footer__meta">{mood}</span>}
-                        </div>
                     </footer>
 
                     {/* hover 渐变遮罩 */}
-                    <div class="note-card__overlay" aria-hidden="true"></div>
+                    <div class="absolute inset-0 bg-gradient-to-br from-[var(--primary)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-[inherit]"></div>
                 </article>
             </li>
         );
@@ -258,25 +273,23 @@ const notes = await Promise.all(
     position: relative;
     margin-top: 0.2rem;
     align-self: flex-start;
-    width: 1.6rem;
-    height: 1.6rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.4rem;
-    line-height: 1;
-    color: color-mix(in srgb, var(--tl) 80%, transparent);
-    transition: transform 0.25s ease, color 0.25s ease;
+    width: 0.6rem;
+    height: 0.6rem;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+    border-radius: 50%;
+    background-color: color-mix(in srgb, var(--tl) 60%, transparent);
+    transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
     z-index: 1;
-    user-select: none;
 }
-.note-timeline__dot::before {
-    content: "★";
+.note-timeline__dot--pinned { 
+    background-color: var(--primary); 
+    box-shadow: 0 0 8px color-mix(in srgb, var(--primary) 50%, transparent);
 }
-.note-timeline__dot--pinned { color: var(--primary); }
 .note-timeline__item:hover .note-timeline__dot {
-    transform: scale(1.25) rotate(20deg);
-    color: var(--primary);
+    transform: scale(1.5);
+    background-color: var(--primary);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--primary) 40%, transparent);
 }
 
 /* ══════════════════════════════════════
@@ -287,49 +300,32 @@ const notes = await Promise.all(
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
-    padding: clamp(0.85rem, 2vw, 1.2rem) clamp(1rem, 2.5vw, 1.5rem);
-    background: color-mix(in srgb, var(--primary) 16%, var(--card-bg));
-    box-shadow: 0 4px 24px -18px rgba(0,0,0,0.3);
-    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    padding: clamp(1rem, 2.5vw, 1.25rem);
+    background: transparent;
+    border: 1px solid color-mix(in srgb, var(--foreground, currentColor) 8%, transparent);
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px -2px rgba(0,0,0,0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .note-timeline__item:hover .note-timeline__card {
     transform: translateY(-2px);
-    border-color: color-mix(in srgb, var(--tl) 40%, transparent);
-    box-shadow: 0 12px 32px -18px rgba(0,0,0,0.18);
+    border-color: color-mix(in srgb, var(--primary) 30%, transparent);
+    box-shadow: 0 8px 24px -6px rgba(0,0,0,0.12);
 }
 .note-timeline__card--pinned {
     border-color: color-mix(in srgb, var(--primary) 40%, transparent);
-    background: color-mix(in srgb, var(--card-bg) 95%, color-mix(in srgb, var(--primary) 12%, transparent));
+    background: color-mix(in srgb, var(--primary) 3%, transparent);
 }
 
 /* 顶部 meta */
-.note-card__meta {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-.note-pin-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.15rem;
-    padding: 0.1rem 0.4rem;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--primary) 14%, transparent);
-    color: var(--primary);
-    font-size: 0.62rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-}
 .note-updated {
     display: inline-flex;
     align-items: center;
     gap: 0.15rem;
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     color: color-mix(in srgb, currentColor 45%, transparent);
     background: color-mix(in srgb, var(--tl) 10%, transparent);
-    padding: 0.08rem 0.38rem;
+    padding: 0.15rem 0.5rem;
     border-radius: 999px;
 }
 
@@ -349,71 +345,42 @@ const notes = await Promise.all(
     border-radius: 999px;
 }
 
-/* 图片网格 */
-.note-images { display: grid; gap: 0.3rem; }
-.note-images--single { grid-template-columns: 1fr; max-width: 20rem; }
-.note-images--double { grid-template-columns: repeat(2, 1fr); max-width: 24rem; }
-.note-images--triple { grid-template-columns: repeat(2, 1fr); max-width: 24rem; }
+/* 图片网格 (响应式 Mizuki 风格) */
+.note-images { display: grid; gap: 0.5rem; }
+.note-images--single { grid-template-columns: 1fr; max-width: 400px; }
+.note-images--double { grid-template-columns: repeat(2, 1fr); max-width: 500px; }
+.note-images--triple { grid-template-columns: repeat(2, 1fr); max-width: 500px; }
 .note-images--triple .note-img-wrap:first-child { grid-row: span 2; }
-.note-images--grid   { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+.note-images--grid   { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); max-width: 600px; }
+@media (min-width: 768px) {
+    .note-images--single { max-width: 500px; }
+    .note-images--double { max-width: 560px; }
+    .note-images--grid   { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); max-width: 700px; }
+}
 @media (max-width: 480px) {
     .note-images--triple .note-img-wrap:first-child { grid-row: span 1; }
-    .note-images--triple { grid-template-columns: repeat(2, 1fr); }
 }
 .note-img-wrap {
     display: block;
     aspect-ratio: 1;
-    border-radius: 0.4rem;
+    border-radius: 0.5rem;
     overflow: hidden;
-    background: color-mix(in srgb, var(--primary) 6%, var(--card-bg));
+    background: color-mix(in srgb, var(--foreground, currentColor) 4%, transparent);
 }
-.note-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
-.note-img-wrap:hover .note-img { transform: scale(1.06); }
+.note-img { width: 100%; height: 100%; object-fit: cover; }
 
-/* footer */
-.note-card__footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 0.68rem;
-    color: color-mix(in srgb, var(--primary) 55%, currentColor 45%);
-    flex-wrap: wrap;
-    gap: 0.35rem;
-    padding-top: 0.3rem;
-    border-top: 1px solid color-mix(in srgb, currentColor 50%, transparent);
-}
-.note-footer__left, .note-footer__right { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
-.note-footer__meta { display: inline-flex; align-items: center; gap: 0.15rem; }
-
-/* 标签 */
-.note-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; }
-.note-tag {
-    font-size: 0.62rem;
-    color: var(--primary);
-    background: color-mix(in srgb, var(--primary) 10%, transparent);
-    padding: 0.08rem 0.4rem;
-    border-radius: 999px;
-    font-weight: 500;
-    transition: background 0.15s ease;
-}
-.note-tag:hover { background: color-mix(in srgb, var(--primary) 20%, transparent); }
-
-/* hover 遮罩 */
-.note-card__overlay {
-    pointer-events: none;
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 5%, transparent), transparent 60%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    border-radius: inherit;
-}
-.note-timeline__item:hover .note-card__overlay { opacity: 1; }
-
-/* 暗色模式 */
+/* 暗色模式覆盖 */
 :global(.dark) .note-timeline { --tl: color-mix(in srgb, var(--primary) 70%, white 8%); }
 :global(.dark) .note-timeline__card {
-    background: color-mix(in srgb, var(--primary) 12%, var(--card-bg));
+    border-color: color-mix(in srgb, white 10%, transparent);
+    box-shadow: 0 2px 8px -2px rgba(0,0,0,0.2);
+}
+:global(.dark) .note-timeline__item:hover .note-timeline__card {
+    border-color: color-mix(in srgb, var(--primary) 40%, transparent);
+    box-shadow: 0 8px 24px -6px rgba(0,0,0,0.4);
+}
+:global(.dark) .note-timeline__card--pinned {
+    background: color-mix(in srgb, var(--primary) 8%, transparent);
 }
 
 /* 移动端 */
