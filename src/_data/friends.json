@@ -18,10 +18,10 @@
 		"siteIcon": "https://avatars.githubusercontent.com/u/186908663?v=4"
 	},
 	{
-		"siteTitle": "HasonoCell",
-		"siteDesc": "Because I can hear you",
-		"siteUrl": "https://hasonocell.club/",
-		"siteIcon": "https://hasonocell.club/img/avatar.png"
+		"siteTitle": "HasonoCell's Blog",
+		"siteDesc": "The brain is wider than the sky",
+		"siteUrl": "https://www.hasonocell.xyz/",
+		"siteIcon": "https://www.hasonocell.xyz/image/icon/avatar.jpg"
 	},
 	{
 		"siteTitle": "MeTの主页",
@@ -46,5 +46,23 @@
 		"siteDesc": "后端学习者",
 		"siteUrl": "https://www.claran-blog.work/",
 		"siteIcon": "https://www.claran-blog.work/_astro/Amiya.vswFF26b_gGs1t.webp"
+	},
+	{
+		"siteTitle": "Lunarain_079's Inn",
+		"siteDesc": "どんな夢を見に行こうか",
+		"siteUrl": "https://www.lunarain.top/",
+		"siteIcon": "https://www.lunarain.top/_astro/avatar.Dm3QZcSn_wLazz.webp"
+	},
+	{
+		"siteTitle": "CAICAIIs",
+		"siteDesc": "愚者在月影之中怀抱虚妄",
+		"siteUrl": "https://caicaiis.cc/",
+		"siteIcon": "https://caicaiis.cc/assets/images/photo.jpg"
+	},
+	{
+		"siteTitle": "NolanHo",
+		"siteDesc": "踏星穷极真理，长夜孤征",
+		"siteUrl": "https://axi.moe/",
+		"siteIcon": "https://axi.moe/assets/icon.jpg"
 	}
 ]
