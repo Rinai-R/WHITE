@@ -29,8 +29,8 @@ export const siteConfig: SiteConfig = {
 	wallpaper: {
 		mode: "banner",
 		src: {
-			desktop: ["assets/images/roxy2.jpg"],
-			mobile: ["assets/images/roxy2.jpg"],
+			desktop: ["assets/images/rena.png"],
+			mobile: ["assets/images/rena.png"],
 		},
 		position: "center",
 		carousel: {
