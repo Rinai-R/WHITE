@@ -594,6 +594,17 @@ const setup = () => {
 		} else {
 			bodyElement!.classList.remove('lg:is-home');
 		}
+		// Toggle banner image zoom effect directly via JS for reliability
+		const bannerImg = document.querySelector('#banner img') as HTMLImageElement | null;
+		if (bannerImg) {
+			if (isHomeTarget) {
+				bannerImg.style.transform = 'scale(1.1)';
+				bannerImg.style.objectPosition = 'center center';
+			} else {
+				bannerImg.style.transform = 'scale(1)';
+				bannerImg.style.objectPosition = 'center 30%';
+			}
+		}
 		syncNavbarForRoute(isHomeTarget);
 		updateScrollThresholds();
 		requestScrollUpdate();
@@ -792,13 +803,36 @@ const setup = () => {
 
 // Initialize Swup hooks when ready
 // In production, swup may initialize after this script loads
+// (@swup/astro may not dispatch 'swup:enable', so we also poll)
 const initSwupHooks = () => {
 	if (!window.swup?.hooks) return false;
 	setup();
+	// Set initial banner image state on first successful hook registration
+	const isCurrentlyHome = document.body.classList.contains('lg:is-home');
+	const bannerImg = document.querySelector('#banner img') as HTMLImageElement | null;
+	if (bannerImg) {
+		if (isCurrentlyHome) {
+			bannerImg.style.transform = 'scale(1.1)';
+			bannerImg.style.objectPosition = 'center center';
+		} else {
+			bannerImg.style.transform = 'scale(1)';
+			bannerImg.style.objectPosition = 'center 30%';
+		}
+	}
 	return true;
 };
 
 if (!initSwupHooks()) {
-	document.addEventListener('swup:enable', initSwupHooks, { once: true });
+	let swupPollTimer: ReturnType<typeof setInterval>;
+	const onSwupReady = () => {
+		if (initSwupHooks()) {
+			clearInterval(swupPollTimer);
+		}
+	};
+	// Fallback: poll for window.swup since 'swup:enable' event may not fire
+	document.addEventListener('swup:enable', onSwupReady, { once: true });
+	swupPollTimer = setInterval(onSwupReady, 100);
+	// Safety: stop polling after 10s regardless
+	setTimeout(() => clearInterval(swupPollTimer), 10000);
 }
 </script>

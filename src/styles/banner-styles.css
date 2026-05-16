@@ -198,10 +198,13 @@
     }
     
     /* 妗岄潰绔浘鐗囧鍣ㄤ紭鍖?*/
-    .carousel-item img,
+    .carousel-item img {
+        object-position: center center !important;
+        transition: transform 1s ease-out !important;
+    }
+    /* Banner image transition only - transform and object-position controlled by JS */
     #banner img {
-        object-position: center center !important; /* 纭繚鍥剧墖灞呬腑鏄剧ず */
-        transition: transform 1s ease-out !important; /* 涓庣Щ鍔ㄧ淇濇寔涓€鑷寸殑杩囨浮鏃堕棿 */
+        transition: transform 1s ease-out, object-position 0.7s ease-out !important;
     }
     
     /* 妗岄潰绔疆鎾浘鐗囪繃娓′紭鍖?- 涓庣Щ鍔ㄧ淇濇寔涓€鑷?*/
@@ -239,10 +242,13 @@
    绉诲姩绔浘鐗囦紭鍖?   ================================ */
 @media (max-width: 1023px) {
     /* 绉诲姩绔浘鐗囧鍣ㄤ紭鍖?*/
-    .carousel-item img,
+    .carousel-item img {
+        object-position: center center !important;
+        transition: transform 0.5s ease-out !important;
+    }
+    /* Banner image transition only - transform and object-position controlled by JS */
     #banner img {
-        object-position: center center !important; /* 纭繚鍥剧墖灞呬腑鏄剧ず */
-        transition: transform 0.5s ease-out !important; /* 浼樺寲杩囨浮鏃堕棿锛岄伩鍏嶄笌杞挱闂撮殧鍐茬獊 */
+        transition: transform 0.5s ease-out, object-position 0.5s ease-out !important;
     }
     
     /* 杞挱鍥剧墖杩囨浮浼樺寲 - 涓庣數鑴戠淇濇寔涓€鑷?*/
