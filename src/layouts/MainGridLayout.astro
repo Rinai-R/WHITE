@@ -114,7 +114,7 @@ const mainPanelTop = isBannerMode
 
 <!-- Main content -->
 <div id="main-content-layer" class="absolute w-full z-30 pointer-events-none"
-     class:list={[{"mobile-main-no-banner": !isHomePage && isBannerMode, "no-banner-layout": !isBannerMode}]}
+     class:list={[{"home-layout": isHomePage && isBannerMode, "mobile-main-no-banner": !isHomePage && isBannerMode, "no-banner-layout": !isBannerMode}]}
      style={`top: ${mainPanelTop}`}>
     <!-- The pointer-events-none here prevent blocking the click event of the TOC -->
     <div class="relative max-w-[var(--page-width)] mx-auto 2xl:pl-12 2xl:pr-0 pointer-events-auto">
@@ -137,7 +137,7 @@ const mainPanelTop = isBannerMode
 
             <SideBar class="mb-4 row-start-2 row-end-3 col-span-1 lg:row-start-1 lg:row-end-2 lg:col-start-1 lg:col-span-1 lg:max-w-[16rem] onload-animation" headings={headings}></SideBar>
 
-            <main id="swup-container" class="transition-swup-fade col-span-1 lg:col-start-2 lg:col-span-1 overflow-hidden">
+            <main id="swup-container" class="transition-swup-fade col-span-1 lg:col-start-2 lg:col-span-1 overflow-hidden px-3 md:px-0">
                 <div id="content-wrapper" class="onload-animation">
                     <!-- the overflow-hidden here prevent long text break the layout-->
                     <!-- make id different from windows.swup global property -->

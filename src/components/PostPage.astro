@@ -1,6 +1,7 @@
 ---
 import type { CollectionEntry } from "astro:content";
 import { getPostUrlBySlug } from "@utils/url-utils";
+import { Icon } from "astro-icon/components";
 import PostCard from "./PostCard.astro";
 
 const { page } = Astro.props;
@@ -8,7 +9,18 @@ const { page } = Astro.props;
 let delay = 0;
 const interval = 50;
 ---
-<div class="transition flex flex-col rounded-[var(--radius-large)] bg-[var(--card-bg)] py-1 md:py-0 md:bg-transparent md:gap-4 mb-4">
+<section aria-labelledby="latest-posts-title" class="mb-5">
+    <header class="onload-animation mb-4 flex items-end justify-between px-1">
+        <div>
+            <div class="mb-1 flex items-center gap-2 text-[var(--primary)]">
+                <Icon name="material-symbols:auto-stories-outline-rounded" class="text-xl" />
+                <span class="text-xs font-bold uppercase">Journal</span>
+            </div>
+            <h2 id="latest-posts-title" class="text-2xl font-bold text-90">最新文章</h2>
+        </div>
+        <span class="text-sm text-50">{page.total} 篇</span>
+    </header>
+    <div class="transition flex flex-col gap-3 md:gap-4">
     {page.data.map((entry: CollectionEntry<"posts">) => (
         <PostCard
                 entry={entry}
@@ -25,4 +37,5 @@ const interval = 50;
                 style={`animation-delay: calc(var(--content-delay) + ${delay++ * interval}ms);`}
         ></PostCard>
     ))}
-</div>
+    </div>
+</section>

@@ -35,9 +35,10 @@ let links: NavBarLink[] = navBarConfig.links.map(
     <a href={url('/')} class="btn-plain scale-animation rounded-lg h-[3.25rem] px-5 font-bold active:scale-95 brand-link">
       <div class="flex flex-row text-[var(--primary)] items-center text-md gap-2">
         <Icon name="material-symbols:filter-vintage-outline" class="text-[1.75rem]" />
-        <span class="brand-title text-[1.05rem] sm:text-[1.15rem]">
+        <span class="brand-title hidden text-[1.05rem] sm:inline sm:text-[1.15rem]">
           {siteConfig.title}
         </span>
+        <span class="brand-short text-[0.95rem] sm:hidden">Rinai</span>
       </div>
     </a>
     <div class="hidden md:flex items-center space-x-2 xl:space-x-1 2xl:space-x-2 navbar-nav-links">

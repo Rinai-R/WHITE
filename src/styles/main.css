@@ -34,7 +34,8 @@ h1, h2, h3, h4, h5, h6 {
 
 @layer components {
     .card-base {
-        @apply rounded-[var(--radius-large)] overflow-hidden bg-[var(--card-bg)] transition;
+        @apply rounded-[var(--radius-large)] overflow-hidden bg-[var(--card-bg)] transition border border-[var(--card-border)];
+        box-shadow: var(--card-shadow);
     }
     h1, h2, h3, h4, h5, h6, p, a, span, li, ul, ol, blockquote, code, pre, table, th, td, strong {
         @apply transition;
@@ -141,6 +142,52 @@ h1, h2, h3, h4, h5, h6 {
     }
     .btn-regular-dark.success {
         @apply bg-[oklch(0.75_0.14_var(--hue))] dark:bg-[oklch(0.75_0.14_var(--hue))]
+    }
+}
+
+html {
+    scroll-padding-top: 5.5rem;
+}
+
+body {
+    line-height: 1.65;
+    letter-spacing: 0;
+}
+
+#top-row {
+    padding-top: 0.75rem;
+}
+
+#navbar > div:not(:first-child) {
+    min-height: 4rem;
+}
+
+#navbar .brand-title {
+    letter-spacing: 0;
+}
+
+#main-grid {
+    gap: 1rem;
+}
+
+@media (max-width: 767px) {
+    #top-row {
+        padding-top: 0;
+    }
+
+    #main-grid {
+        gap: 0.75rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 }
 

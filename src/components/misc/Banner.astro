@@ -112,15 +112,15 @@ const creditUrl = credit?.url;
 	{/* Home banner copy */}
 	{showHomeText && (
 		<div class="banner-text-overlay absolute inset-0 z-20 flex items-center justify-center">
-			<div class="w-4/5 lg:w-3/4 text-center mb-0">
+			<div class="banner-copy text-center">
 				<div class="flex flex-col">
 					{homeTitle && (
-						<h1 class="banner-title text-6xl lg:text-8xl text-white drop-shadow-lg mb-2 lg:mb-4">
+						<h1 class="banner-title text-white">
 							{homeTitle}
 						</h1>
 					)}
 					{homeSubtitle && (
-						<h2 class="banner-subtitle text-xl lg:text-3xl text-white/90 drop-shadow-md">
+						<p class="banner-subtitle text-white/90">
 							{typewriter?.enable ? (
 								<TypewriterText
 									text={homeSubtitle}
@@ -129,7 +129,7 @@ const creditUrl = credit?.url;
 									pauseTime={typewriter.pauseTime}
 								/>
 							) : Array.isArray(homeSubtitle) ? homeSubtitle[0] : homeSubtitle}
-						</h2>
+						</p>
 					)}
 				</div>
 			</div>
