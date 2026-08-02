@@ -62,14 +62,6 @@ if (!lang) {
 	lang = `${siteConfig.lang}`;
 }
 const siteLang = lang.replace("_", "-");
-
-const bannerOffsetByPosition = {
-	top: `${BANNER_HEIGHT_EXTEND}vh`,
-	center: `${BANNER_HEIGHT_EXTEND / 2}vh`,
-	bottom: "0",
-};
-const bannerOffset =
-	bannerOffsetByPosition[siteConfig.wallpaper?.position || "center"];
 ---
 
 <!DOCTYPE html>
@@ -149,8 +141,7 @@ const bannerOffset =
 
 		<style is:global>
 		  /* Semi mode: always show blurred card */
-		  #navbar[data-transparent-mode="semi"] > div,
-		  #navbar[data-transparent-mode="semi"][data-is-home="false"] > div {
+		  #navbar[data-transparent-mode="semi"] > div {
 			backdrop-filter: blur(20px);
 			background: rgba(255, 255, 255, 0.55);
 			border: 1px solid rgba(255, 255, 255, 0.55);
@@ -158,8 +149,7 @@ const bannerOffset =
 			box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 		  }
 		  /* Semifull mode: when scrolled or闈為椤甸兘搴旀樉绀哄崱鐗?*/
-		  #navbar[data-transparent-mode="semifull"].scrolled > div,
-		  #navbar[data-transparent-mode="semifull"][data-is-home="false"] > div {
+		  #navbar[data-transparent-mode="semifull"].scrolled > div {
 			backdrop-filter: blur(20px);
 			background: rgba(255, 255, 255, 0.55);
 			border: 1px solid rgba(255, 255, 255, 0.55);
@@ -168,9 +158,7 @@ const bannerOffset =
 		  }
 		  /* Dark theme variants */
 		  :root.dark #navbar[data-transparent-mode="semi"] > div,
-		  :root.dark #navbar[data-transparent-mode="semi"][data-is-home="false"] > div,
-		  :root.dark #navbar[data-transparent-mode="semifull"].scrolled > div,
-		  :root.dark #navbar[data-transparent-mode="semifull"][data-is-home="false"] > div {
+		  :root.dark #navbar[data-transparent-mode="semifull"].scrolled > div {
 			background: rgba(0, 0, 0, 0.55);
 			border: 1px solid rgba(0, 0, 0, 0.55);
 			box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
@@ -187,12 +175,6 @@ const bannerOffset =
 		    if (!navbar) return;
 		    var mode = navbar.getAttribute('data-transparent-mode');
 		    if (mode !== 'semifull') return; // only matters for semifull
-		    // If not home, force scrolled; otherwise based on scrollY
-		    var isHome = navbar.getAttribute('data-is-home') === 'true' || document.body.classList.contains('lg:is-home');
-		    if (!isHome) {
-		      navbar.classList.add('scrolled');
-		      return;
-		    }
 		    if (window.scrollY > 8) navbar.classList.add('scrolled'); else navbar.classList.remove('scrolled');
 		  }
 		  if (document.readyState === 'loading') {
@@ -231,32 +213,24 @@ const bannerOffset =
 </html>
 
 <style is:global define:vars={{
-	bannerOffset,
 	'banner-height-home': `${BANNER_HEIGHT_HOME}vh`,
 	'banner-height': `${BANNER_HEIGHT}vh`,
 }}>
 @tailwind components;
 @layer components {
-	.enable-banner.is-home #banner-wrapper {
+	.enable-banner #banner-wrapper {
 		@apply h-[var(--banner-height-home)] translate-y-[var(--banner-height-extend)]
 	}
-	.enable-banner #banner-wrapper {
-		@apply h-[var(--banner-height-home)]
-	}
-
-	.enable-banner.is-home #banner {
+	.enable-banner #banner {
 		@apply h-[var(--banner-height-home)] translate-y-0
 	}
-	.enable-banner #banner {
-		@apply h-[var(--banner-height-home)] translate-y-[var(--bannerOffset)]
-	}
-	.enable-banner.is-home #main-grid {
+	.enable-banner #main-grid {
 		@apply translate-y-[var(--banner-height-extend)];
 	}
 	.enable-banner #top-row {
 		@apply h-[calc(var(--banner-height-home)_-_4.5rem)] transition-all duration-300
 	}
-	.enable-banner.is-home #sidebar-sticky {
+	.enable-banner #sidebar-sticky {
 		@apply top-[calc(1rem_-_var(--banner-height-extend))]
 	}
 	.navbar-hidden {
@@ -274,14 +248,12 @@ import {
 	// ClickScrollPlugin
 } from 'overlayscrollbars';
 import {getHue, getStoredTheme, setHue, setTheme} from "../utils/setting-utils";
-import {pathsEqual, url} from "../utils/url-utils";
 import {
 	BANNER_HEIGHT,
 	BANNER_HEIGHT_HOME,
 	BANNER_HEIGHT_EXTEND,
 	MAIN_PANEL_OVERLAPS_BANNER_HEIGHT
 } from "../constants/constants";
-import { siteConfig } from '../config';
 
 /* Preload fonts */
 // (async function() {
@@ -526,17 +498,7 @@ if (document.readyState === 'loading') {
 	init();
 }
 
-function syncNavbarForRoute(isHome: boolean) {
-	const navbar = document.getElementById('navbar');
-	if (!navbar) return;
-	navbar.setAttribute('data-is-home', String(isHome));
-	if (navbar.getAttribute('data-transparent-mode') === 'semifull') {
-		// Non-home pages should always render the blurred state immediately.
-		navbar.classList.toggle('scrolled', !isHome || window.scrollY > 8);
-	}
-}
-
-const setup = () => {
+const setupLayoutSwupHooks = () => {
 	// In dev, swup's cached HTML can get out of sync with hot-updated JS and break islands.
 	if (import.meta.env.DEV) {
 		try {
@@ -545,34 +507,9 @@ const setup = () => {
 			console.warn('Failed to clear swup cache in dev:', error);
 		}
 	}
-	// TODO: temp solution to change the height of the banner
-/*
-	window.swup.hooks.on('animation:out:start', () => {
-		const path = window.location.pathname
-		const body = document.querySelector('body')
-		if (path[path.length - 1] === '/' && !body.classList.contains('is-home')) {
-			body.classList.add('is-home')
-		} else if (path[path.length - 1] !== '/' && body.classList.contains('is-home')) {
-			body.classList.remove('is-home')
-		}
-	})
-*/
 	window.swup.hooks.on('link:click', () => {
 		// Remove the delay for the first time page load
 		document.documentElement.style.setProperty('--content-delay', '0ms')
-
-		// prevent elements from overlapping the navbar
-		if (!bannerEnabled) {
-			return
-		}
-		let threshold = window.innerHeight * (BANNER_HEIGHT / 100) - 72 - 16
-		let navbar = document.getElementById('navbar-wrapper')
-		if (!navbar || !document.body.classList.contains('lg:is-home')) {
-			return
-		}
-		if (document.body.scrollTop >= threshold || document.documentElement.scrollTop >= threshold) {
-			navbar.classList.add('navbar-hidden')
-		}
 	})
 	window.swup.hooks.on('content:replace', () => {
 		initCustomScrollbar();
@@ -581,33 +518,11 @@ const setup = () => {
 		updateScrollThresholds();
 		requestScrollUpdate();
 	});
-	window.swup.hooks.on('visit:start', (visit: {to: {url: string}}) => {
+	window.swup.hooks.on('visit:start', () => {
 		if (import.meta.env.DEV) {
 			window.swup?.cache?.empty?.();
 		}
 		scheduleSwupRecovery();
-		// change banner height immediately when a link is clicked
-		const bodyElement = document.querySelector('body')
-		const isHomeTarget = pathsEqual(visit.to.url, url('/'));
-		if (isHomeTarget) {
-			bodyElement!.classList.add('lg:is-home');
-		} else {
-			bodyElement!.classList.remove('lg:is-home');
-		}
-		// Toggle banner image zoom effect directly via JS for reliability
-		const bannerImg = document.querySelector('#banner img') as HTMLImageElement | null;
-		if (bannerImg) {
-			if (isHomeTarget) {
-				bannerImg.style.transform = 'scale(1.1)';
-				bannerImg.style.objectPosition = 'center center';
-			} else {
-				bannerImg.style.transform = 'scale(1)';
-				bannerImg.style.objectPosition = 'center 30%';
-			}
-		}
-		syncNavbarForRoute(isHomeTarget);
-		updateScrollThresholds();
-		requestScrollUpdate();
 
 		// increase the page height during page transition to prevent the scrolling animation from jumping
 		const heightExtend = document.getElementById('page-height-extend')
@@ -627,7 +542,6 @@ const setup = () => {
 		if (heightExtend) {
 			heightExtend.classList.remove('hidden')
 		}
-		syncNavbarForRoute(document.body.classList.contains('lg:is-home'));
 		refreshScrollTargets();
 		updateScrollThresholds();
 		requestScrollUpdate();
@@ -648,6 +562,24 @@ const setup = () => {
         }, 200)
 	});
 };
+
+let layoutSwupHooksBound = false;
+const initLayoutSwupHooks = () => {
+	if (layoutSwupHooksBound || !window.swup?.hooks) return layoutSwupHooksBound;
+	setupLayoutSwupHooks();
+	layoutSwupHooksBound = true;
+	return true;
+};
+
+if (!initLayoutSwupHooks()) {
+	let layoutSwupPollTimer: ReturnType<typeof setInterval>;
+	const onLayoutSwupReady = () => {
+		if (initLayoutSwupHooks()) clearInterval(layoutSwupPollTimer);
+	};
+	document.addEventListener('swup:enable', onLayoutSwupReady, { once: true });
+	layoutSwupPollTimer = setInterval(onLayoutSwupReady, 100);
+	setTimeout(() => clearInterval(layoutSwupPollTimer), 10000);
+}
 
 let backToTopBtn = document.getElementById('back-to-top-btn');
 let toc = document.getElementById('toc-wrapper');
@@ -807,18 +739,6 @@ const setup = () => {
 const initSwupHooks = () => {
 	if (!window.swup?.hooks) return false;
 	setup();
-	// Set initial banner image state on first successful hook registration
-	const isCurrentlyHome = document.body.classList.contains('lg:is-home');
-	const bannerImg = document.querySelector('#banner img') as HTMLImageElement | null;
-	if (bannerImg) {
-		if (isCurrentlyHome) {
-			bannerImg.style.transform = 'scale(1.1)';
-			bannerImg.style.objectPosition = 'center center';
-		} else {
-			bannerImg.style.transform = 'scale(1)';
-			bannerImg.style.objectPosition = 'center 30%';
-		}
-	}
 	return true;
 };
 

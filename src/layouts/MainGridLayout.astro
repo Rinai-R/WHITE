@@ -32,7 +32,7 @@ const isBannerMode = wallpaperMode === WALLPAPER_BANNER;
 const isFullscreenMode = wallpaperMode === WALLPAPER_FULLSCREEN;
 
 const isHomePage = Astro.url.pathname === "/" || Astro.url.pathname === "";
-const mobileNonHomeBannerClass = !isHomePage ? "mobile-hide-banner" : "";
+const mobileNonHomeBannerClass = "";
 
 const toArray = (value: string | string[] | undefined) => {
 	if (!value) return [];
@@ -114,7 +114,7 @@ const mainPanelTop = isBannerMode
 
 <!-- Main content -->
 <div id="main-content-layer" class="absolute w-full z-30 pointer-events-none"
-     class:list={[{"home-layout": isHomePage && isBannerMode, "mobile-main-no-banner": !isHomePage && isBannerMode, "no-banner-layout": !isBannerMode}]}
+     class:list={[{"home-layout": isBannerMode, "no-banner-layout": !isBannerMode}]}
      style={`top: ${mainPanelTop}`}>
     <!-- The pointer-events-none here prevent blocking the click event of the TOC -->
     <div class="relative max-w-[var(--page-width)] mx-auto 2xl:pl-12 2xl:pr-0 pointer-events-auto">
