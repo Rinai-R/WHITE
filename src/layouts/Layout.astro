@@ -12,6 +12,7 @@ import {
 	DARK_MODE,
 	DEFAULT_THEME,
 	LIGHT_MODE,
+	MAIN_CONTENT_WIDTH,
 	PAGE_WIDTH,
 	SYSTEM_MODE,
 } from "../constants/constants";
@@ -132,6 +133,7 @@ const siteLang = lang.replace("_", "-");
 		<style define:vars={{
 			configHue,
 			'page-width': `${PAGE_WIDTH}rem`,
+			'main-content-width': `${MAIN_CONTENT_WIDTH}rem`,
 		}}></style>  <!-- defines global css variables. This will be applied to <html> <body> and some other elements idk why -->
 
 

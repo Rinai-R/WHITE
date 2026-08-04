@@ -17,7 +17,7 @@ const { page } = Astro.props;
 const len = page.data.length;
 ---
 
-<MainGridLayout title={i18n(I18nKey.notes)}>
+<MainGridLayout title={i18n(I18nKey.notes)} wideContent={true}>
     <NoteList page={page} />
     <Pagination
             class="mx-auto onload-animation"

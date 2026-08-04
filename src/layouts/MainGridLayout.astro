@@ -25,6 +25,7 @@ interface Props {
 	lang?: string;
 	setOGTypeArticle?: boolean;
 	headings?: MarkdownHeading[];
+	wideContent?: boolean;
 }
 
 const wallpaperMode = siteConfig.wallpaper.mode ?? WALLPAPER_BANNER;
@@ -73,6 +74,7 @@ const {
 	lang,
 	setOGTypeArticle,
 	headings = [],
+	wideContent = false,
 } = Astro.props;
 
 const hasBannerCredit =
@@ -116,8 +118,9 @@ const mainPanelTop = isBannerMode
      style={`top: ${mainPanelTop}`}>
     <!-- The pointer-events-none here prevent blocking the click event of the TOC -->
     <div class="relative max-w-[var(--page-width)] mx-auto 2xl:pl-12 2xl:pr-0 pointer-events-auto">
-        <div id="main-grid" class="transition duration-700 w-full left-0 right-0 grid grid-cols-1 lg:grid-cols-[16rem_minmax(0,max(0px,calc(var(--page-width)_-_16rem_-_0.75rem)))] 2xl:grid-cols-[16rem_minmax(0,max(0px,calc(var(--page-width)_-_16rem_-_12.5rem_-_1.5rem)))_12.5rem] grid-rows-[auto_1fr_auto] lg:grid-rows-[auto]
-    mx-auto gap-2 lg:gap-3 px-0 md:pl-6 md:pr-2 2xl:pl-12 2xl:pr-0"
+        <div id="main-grid" class:list={["transition duration-700 w-full left-0 right-0 grid grid-cols-1 lg:grid-cols-[16rem_minmax(0,max(0px,calc(var(--page-width)_-_16rem_-_0.75rem)))] 2xl:grid-cols-[16rem_minmax(0,max(0px,calc(var(--page-width)_-_16rem_-_12.5rem_-_1.5rem)))_12.5rem] grid-rows-[auto_1fr_auto] lg:grid-rows-[auto] mx-auto gap-2 lg:gap-3 px-0 md:pl-6 md:pr-2 2xl:pl-12 2xl:pr-0", {
+            "lg:max-xl:grid-cols-1": wideContent,
+        }]}
         >
             <!-- Banner image credit -->
             {hasBannerCredit && <a href={siteConfig.wallpaper.banner?.credit?.url || "#"} id="banner-credit" target={hasBannerLink ? "_blank" : undefined} rel={hasBannerLink ? "noopener" : undefined} aria-label="Visit image source"
@@ -133,10 +136,14 @@ const mainPanelTop = isBannerMode
             </a>}
 
 
-            <SideBar class="mb-4 row-start-2 row-end-3 col-span-1 lg:row-start-1 lg:row-end-2 lg:col-start-1 lg:col-span-1 lg:max-w-[16rem] onload-animation" headings={headings}></SideBar>
+            <SideBar class:list={["mb-4 row-start-2 row-end-3 col-span-1 lg:row-start-1 lg:row-end-2 lg:col-start-1 lg:col-span-1 lg:max-w-[16rem] onload-animation", {
+                "lg:max-xl:hidden": wideContent,
+            }]} headings={headings}></SideBar>
 
-            <main id="swup-container" class="transition-swup-fade col-span-1 lg:col-start-2 lg:col-span-1 overflow-hidden px-3 md:px-0">
-                <div id="content-wrapper" class="onload-animation">
+            <main id="swup-container" class:list={["transition-swup-fade col-span-1 lg:col-start-2 lg:col-span-1 overflow-hidden px-3 md:px-0", {
+                "lg:max-xl:col-start-1": wideContent,
+            }]}>
+                <div id="content-wrapper" class="onload-animation w-full max-w-[var(--main-content-width)] mr-auto">
                     <!-- the overflow-hidden here prevent long text break the layout-->
                     <!-- make id different from windows.swup global property -->
                     <slot></slot>

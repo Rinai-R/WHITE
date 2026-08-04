@@ -1,13 +1,4 @@
 .custom-md {
-    &.post-longform {
-        > p,
-        > section {
-            width: 100%;
-            max-width: 72ch;
-            margin-inline: auto;
-        }
-    }
-
     h1 {
         @apply text-3xl;
     }

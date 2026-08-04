@@ -20,9 +20,9 @@
     font-display: swap;
 }
 
-/* Keep Maple as the display voice; use a proportional face for long-form reading. */
+/* Use Maple across the interface while retaining reliable CJK fallbacks. */
 body, input, textarea, button, select {
-    font-family: Roboto, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-family: 'Maple Mono', "Noto Sans SC", "PingFang SC", "Microsoft YaHei", ui-monospace, monospace;
 }
 
 h1, h2, h3, h4, h5, h6 {
