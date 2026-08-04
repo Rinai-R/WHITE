@@ -10,12 +10,9 @@ let delay = 0;
 const interval = 50;
 ---
 <section aria-labelledby="latest-posts-title" class="mb-5">
-    <header class="onload-animation mb-4 flex items-end justify-between px-1">
-        <div>
-            <div class="mb-1 flex items-center gap-2 text-[var(--primary)]">
-                <Icon name="material-symbols:auto-stories-outline-rounded" class="text-xl" />
-                <span class="text-xs font-bold uppercase">Journal</span>
-            </div>
+    <header class="onload-animation mb-4 flex items-center justify-between px-1">
+        <div class="flex items-center gap-2.5">
+            <Icon name="material-symbols:auto-stories-outline-rounded" class="text-2xl text-[var(--primary)]" />
             <h2 id="latest-posts-title" class="text-2xl font-bold text-90">最新文章</h2>
         </div>
         <span class="text-sm text-50">{page.total} 篇</span>

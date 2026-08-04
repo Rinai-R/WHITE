@@ -20,25 +20,24 @@
     font-display: swap;
 }
 
-/* Apply Maple as the primary UI and content font with sensible fallbacks */
+/* Keep Maple as the display voice; use a proportional face for long-form reading. */
 body, input, textarea, button, select {
-    font-family: 'Maple Mono', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-family: Roboto, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
-/* Optional: make headings use the same font */
 h1, h2, h3, h4, h5, h6 {
-    font-family: 'Maple Mono', inherit;
+    font-family: 'Maple Mono', Roboto, "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
 }
 
 @tailwind components;
 
 @layer components {
     .card-base {
-        @apply rounded-[var(--radius-large)] overflow-hidden bg-[var(--card-bg)] transition border border-[var(--card-border)];
+        @apply rounded-[var(--radius-large)] overflow-hidden bg-[var(--card-bg)] transition-colors duration-200 border border-[var(--card-border)];
         box-shadow: var(--card-shadow);
     }
     h1, h2, h3, h4, h5, h6, p, a, span, li, ul, ol, blockquote, code, pre, table, th, td, strong {
-        @apply transition;
+        @apply transition-colors duration-200;
     }
     .card-shadow {
         @apply drop-shadow-[0_2px_4px_rgba(0,0,0,0.005)]
@@ -154,6 +153,11 @@ body {
     letter-spacing: 0;
 }
 
+:where(a, button, input, textarea, select):focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+}
+
 #top-row {
     padding-top: 0.75rem;
 }
@@ -162,7 +166,9 @@ body {
     min-height: 4rem;
 }
 
-#navbar .brand-title {
+#navbar .brand-title,
+#navbar .brand-short {
+    font-family: 'Maple Mono', Roboto, ui-sans-serif, system-ui, sans-serif;
     letter-spacing: 0;
 }
 

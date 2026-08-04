@@ -115,21 +115,22 @@ class TypewriterEffect {
     }
 }
 
-// 初始化所有打字机效果
-document.addEventListener('DOMContentLoaded', () => {
+function initTypewriters() {
     const typewriterElements = document.querySelectorAll('.typewriter');
     typewriterElements.forEach((element) => {
+        if (!(element instanceof HTMLElement) || element.dataset.typewriterInitialized === 'true') {
+            return;
+        }
+        element.dataset.typewriterInitialized = 'true';
         new TypewriterEffect(element as HTMLElement);
     });
-});
+}
+
+// 初始化所有打字机效果
+document.addEventListener('DOMContentLoaded', initTypewriters);
 
 // 支持页面切换时重新初始化
-document.addEventListener('swup:contentReplaced', () => {
-    const typewriterElements = document.querySelectorAll('.typewriter');
-    typewriterElements.forEach((element) => {
-        new TypewriterEffect(element as HTMLElement);
-    });
-});
+document.addEventListener('swup:contentReplaced', initTypewriters);
 </script>
 
 <style>

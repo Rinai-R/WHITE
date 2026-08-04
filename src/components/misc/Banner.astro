@@ -11,7 +11,6 @@ interface Props {
 		desktop: string | string[];
 		mobile: string | string[];
 	};
-	isHomePage: boolean;
 	mobileNonHomeBannerClass: string;
 	carouselConfig?: {
 		enable?: boolean;
@@ -23,7 +22,6 @@ interface Props {
 const {
 	config,
 	bannerImages,
-	isHomePage,
 	mobileNonHomeBannerClass,
 	carouselConfig,
 	class: className,
@@ -49,7 +47,7 @@ const isCarousel = carouselEntries.length > 1;
 const fallbackDesktop = desktopList[0] ?? mobileList[0] ?? "";
 const fallbackMobile = mobileList[0] ?? desktopList[0] ?? "";
 
-const showHomeText = Boolean(config.banner?.homeText?.enable && isHomePage);
+const showHomeText = Boolean(config.banner?.homeText?.enable);
 const homeTitle = config.banner?.homeText?.title;
 const homeSubtitle = config.banner?.homeText?.subtitle;
 const typewriter = config.banner?.homeText?.typewriter;

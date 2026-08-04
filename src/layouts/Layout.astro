@@ -225,7 +225,7 @@ const siteLang = lang.replace("_", "-");
 		@apply h-[var(--banner-height-home)] translate-y-0
 	}
 	.enable-banner #main-grid {
-		@apply translate-y-[var(--banner-height-extend)];
+		@apply translate-y-0 lg:translate-y-[var(--banner-height-extend)];
 	}
 	.enable-banner #top-row {
 		@apply h-[calc(var(--banner-height-home)_-_4.5rem)] transition-all duration-300
@@ -736,9 +736,11 @@ const setup = () => {
 // Initialize Swup hooks when ready
 // In production, swup may initialize after this script loads
 // (@swup/astro may not dispatch 'swup:enable', so we also poll)
+let photoSwipeHooksBound = false;
 const initSwupHooks = () => {
-	if (!window.swup?.hooks) return false;
+	if (photoSwipeHooksBound || !window.swup?.hooks) return photoSwipeHooksBound;
 	setup();
+	photoSwipeHooksBound = true;
 	return true;
 };
 

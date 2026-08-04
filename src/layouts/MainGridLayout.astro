@@ -31,7 +31,6 @@ const wallpaperMode = siteConfig.wallpaper.mode ?? WALLPAPER_BANNER;
 const isBannerMode = wallpaperMode === WALLPAPER_BANNER;
 const isFullscreenMode = wallpaperMode === WALLPAPER_FULLSCREEN;
 
-const isHomePage = Astro.url.pathname === "/" || Astro.url.pathname === "";
 const mobileNonHomeBannerClass = "";
 
 const toArray = (value: string | string[] | undefined) => {
@@ -106,7 +105,6 @@ const mainPanelTop = isBannerMode
     <Banner
         config={siteConfig.wallpaper}
         bannerImages={bannerImages}
-        isHomePage={isHomePage}
         mobileNonHomeBannerClass={mobileNonHomeBannerClass}
         carouselConfig={carouselConfig}
     ></Banner>
